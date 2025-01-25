@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <title>Synchronized Slider</title>
+    </head>
+    <body>
+        <h1>Current Affairs</h1>
+        <form method="POST" action="/room_action">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username"><br>
+
+            <label for="create-room">Create Room:</label>
+            <input type="submit" name="action" value="Create Room"><br>
+
+            <label for="join-code">Room Code:</label>
+            <input type="text" id="join-code" name="join-code">
+            <input type="submit" name="action" value="Join Room">
+        </form>
+        {% if ctx.err %}
+            <p style="color: red">{{ ctx.msg }}</p>
+        {% endif %}
+    </body>
+</html>
