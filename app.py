@@ -1,9 +1,14 @@
 from flask import Flask, request, render_template, redirect, url_for
 from flask_socketio import SocketIO, send, emit, join_room, leave_room
+from dotenv import load_dotenv
+import os
 import random
 import string
 
+load_dotenv()
+
 app = Flask(__name__)
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
 socketio = SocketIO(app, cors_allowed_origins='*')
 
 rooms = {}
