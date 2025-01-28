@@ -8,13 +8,15 @@
     <title>Lobby</title>
 </head>
 <body>
-    <h1>Lobby: {{ code }}</h1>
+    <h1>Lobby: {{ ctx.code }}</h1>
     <h2>Players: {{ players | length}}</h2>
     <ul>
         {% for player in players %}
             <li>{{player}}</li>
         {% endfor %}
     </ul>
-    <button>Leave</button>
+    <form method="POST">
+        <button type="submit" id="leave" name="leave" value="leave">Leave</button>
+    </form>
 </body>
 </html>
