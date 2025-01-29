@@ -5,17 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script type="module" src="{{ url_for('static', filename='js/client.js') }}"></script>
-    <title>Lobby</title>
+    <title>Game Screen</title>
 </head>
 <body>
-    <h1>Lobby: {{ ctx.code }}</h1>
-    <h2>Players: <span id="player-total">0</span></h2>
-    <ul id="player-list"></ul>
     <form method="POST">
-        <button type="submit" id="start" name="action" value="start">Start Game</button>
-    </form>
-    <form method="POST">
-        <button type="submit" id="leave" name="action" value="leave">Leave</button>
+        <label for="bid">Bid:</label>
+        <input type="text" id="bid" name="bid">
+        <input type="submit" name="bid-submit" value="Submit Bid">
     </form>
 </body>
 </html>

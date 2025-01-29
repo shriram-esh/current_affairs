@@ -17,13 +17,13 @@ def generate_code():
     while (True):
         code = ''.join(random.choices(string.ascii_uppercase, k=4))
         if code not in rooms:
-            rooms[code] = {"players": []}
             break
     return code
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
     session.clear()
+    print(rooms)
     if request.method == 'POST':
         username = request.form.get('username')
         action = request.form.get('action')
@@ -33,7 +33,7 @@ def index():
             return render_template('index.html', ctx=context)
         if action == "Create Room":
             room = generate_code()
-            rooms[room] = {"total_players": 0, "players": []}
+            rooms[room] = {"players": []}
             session["room"] = room
             session["name"] = username
             return redirect(url_for('lobby', code=room))
@@ -56,34 +56,46 @@ def lobby(code):
         return redirect(url_for("index"))
     
     if request.method == "POST":
-        return redirect(url_for('index'))
+        action = request.form.get('action')
+
+        if action == 'leave': 
+            return redirect(url_for('index'))
+        elif action == 'start':
+            return redirect(url_for('game'))
     
-    context={
-                "code": code
-            }
+    context={ "code": code }
     return render_template('lobby.html', ctx=context)
 
+@app.route('/game', methods=['GET', 'POST'])
+def game():
+    return render_template('game.html')
+
 @socketio.on('connect')
-def user_connect(): 
-    print("User Connected")
+def user_connect(auth):
+    room = session.get("room")
+    name = session.get("name")
+
+    if room and name:
+        join_room(room)
+        rooms[room]["players"].append(name)
+        socketio.emit("user_change", rooms[room], to=room)
+    
+    print(f"User {name} joined room {room}")
 
 @socketio.on('disconnect')
 def user_disconnect():
-    print("User Disconnected")
+    room = session.get("room")
+    name = session.get("name")
 
-@socketio.on('join')
-def on_join(data):
-    username = data['username']
-    room = data['room']
-    join_room(room)
-    send(username + ' has entered the room.', to=room)
+    if room and name:
+        leave_room(room)
+        rooms[room]["players"].remove(name)
+        if len(rooms[room]["players"]) == 0:
+            del rooms[room]
+        else:
+            socketio.emit("user_change", rooms[room], to=room)
 
-@socketio.on('leave')
-def on_leave(data):
-    username = data['username']
-    room = data['room']
-    leave_room(room)
-    send(username + ' has left the room.', to=room)
+    print(f"User {name} left room {room}")
 
 if __name__ == '__main__':
     socketio.run(app, host='0.0.0.0')
