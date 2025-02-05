@@ -2,19 +2,24 @@ import { io } from "https://cdn.socket.io/4.8.1/socket.io.esm.min.js";
 
 $(document).ready(function() {
 
-    const socket = io("http://localhost:5000/lobby");
-
-    socket.emit("join_room", {
-        room: "{{ ctx['room'] }}",
-        name: "{{ ctx['name'] }}"
-    });
+    const socket = io("/lobby");
 
     socket.on('user_change', (data) => {
+        console.log(data);
         $("#player-total").html(data["players"].length);
 
         $('#player-list').empty();
         $.each(data["players"], function (index, player) {
             $('#player-list').append(`<li>${player}</li>`); 
         });
+    });
+
+    $('#start').click(function(e) {
+        e.preventDefault();
+        socket.emit('start_game', { message: 'Start the game' });
+    });
+
+    socket.on('game_start', (data) => {
+        window.location.href = '/game'; 
     });
 });

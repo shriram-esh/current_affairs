@@ -1,5 +1,5 @@
 from flask import Flask, request, session, render_template, redirect, url_for
-from flask_socketio import SocketIO, Namespace, send, emit, join_room, leave_room
+from flask_socketio import SocketIO, Namespace, send, emit, join_room, leave_room, disconnect
 from dotenv import load_dotenv
 import os
 import random
@@ -22,8 +22,13 @@ def generate_code():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
+    room = session.get("room")
+    name = session.get("name")
+    if room:
+        rooms[room]["players"].remove(name)
+        if len(rooms[room]["players"]) == 0:
+            del rooms[room]
     session.clear()
-    print(rooms)
     if request.method == 'POST':
         username = request.form.get('username')
         action = request.form.get('action')
@@ -33,15 +38,26 @@ def index():
             return render_template('index.html', ctx=context)
         if action == "Create Room":
             room = generate_code()
-            rooms[room] = {"players": []}
+            rooms[room]={
+                            "players": [], 
+                            "game": {
+                                        "started": False
+                                    }
+                        }
             session["room"] = room
             session["name"] = username
+            rooms[room]["players"].append(username)
+            print(rooms[room]["players"])
             return redirect(url_for('lobby'))
         elif action == "Join Room":
             code = request.form.get('join-code')
+            if code in rooms and rooms[code]["game"]["started"]:
+                context = { "err": True, "msg": "Game Started" }
+                return render_template('index.html', ctx=context)
             if code in rooms:
                 session["room"] = code
                 session["name"] = username
+                rooms[code]["players"].append(username)
                 return redirect(url_for('lobby'))
             else: 
                 context = { "err": True, "msg": "Room does not exist" }
@@ -53,8 +69,7 @@ def index():
 def lobby():
     room = session.get("room")
     name = session.get("name")
-    print(room)
-    if room is None or session.get("name") is None or room not in rooms:
+    if room is None or name is None or room not in rooms:
         return redirect(url_for("index"))
     
     if request.method == "POST":
@@ -62,58 +77,50 @@ def lobby():
 
         if action == 'leave': 
             return redirect(url_for('index'))
-        elif action == 'start':
-            return redirect(url_for('game'))
     
     context={ "room": room, "name": name }
-    print(session.get("room"), session.get("name"))
     return render_template('lobby.html', ctx=context)
 
 @app.route('/game', methods=['GET', 'POST'])
 def game():
-    return render_template('game.html')
+    room = session.get("room")
+    return render_template('game.html', ctx=rooms[room])
 
 class LobbyNamespace(Namespace):
     def on_connect(self):
         room = session.get("room")
         name = session.get("name")
 
-        if room and name:
-            join_room(room)
-            rooms[room]["players"].append(name)
-            socketio.emit("user_change", rooms[room], to=room)
-        
         print(f"User {name} joined room {room}")
+        join_room(room)
+        socketio.emit("user_change", rooms[room], namespace='/lobby', to=room)
+        
 
     def on_disconnect(self, reason):
         room = session.get("room")
         name = session.get("name")
 
-        if room and name:
-            leave_room(room)
-            rooms[room]["players"].remove(name)
-            if len(rooms[room]["players"]) == 0:
-                del rooms[room]
-            else:
-                socketio.emit("user_change", rooms[room], to=room)
-
         print(f"User {name} left room {room}")
-
-    def on_join_room(self, data):
-        room = data.get("room")
-        name = data.get("name")
-
-        print(f"Room: {room} and Name: {name}")
+        leave_room(room)
+        if room in rooms and rooms[room]["players"]:
+            socketio.emit("user_change", rooms[room], namespace='/lobby', to=room)
+        
+    def on_start_game(self, data):
+        room = session.get("room")
+        
+        if room in rooms and rooms[room]["players"]:
+            socketio.emit('game_start', {'message': 'Game is starting!'}, namespace='/lobby', to=room)
+            rooms[room]["game"]["started"] = True
 
 class GameNamespace(Namespace):
     def on_connect(self):
+        print("Game Connect")
         pass
 
     def on_disconnect(self, reason):
+        print("Game Disconnect")
         pass
 
-    def on_my_event(self, data):
-        emit('my_response', data)
 
 socketio.on_namespace(LobbyNamespace('/lobby'))
 socketio.on_namespace(GameNamespace('/game'))

@@ -13,5 +13,13 @@
         <input type="text" id="bid" name="bid">
         <input type="submit" name="bid-submit" value="Submit Bid">
     </form>
+    <ul id="player-list">
+        {% for player in ctx.players %}
+            <li>{{ player }}</li>
+        {% else %}
+            <li>No players in the room.</li>
+        {% endfor %}
+    </ul>
+    <button>Leave</button>
 </body>
 </html>
