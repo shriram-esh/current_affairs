@@ -24,7 +24,7 @@ def generate_code():
 def index():
     room = session.get("room")
     name = session.get("name")
-    if room:
+    if room in rooms and name in rooms[room]["players"]:
         rooms[room]["players"].remove(name)
         if len(rooms[room]["players"]) == 0:
             del rooms[room]
@@ -115,11 +115,13 @@ class LobbyNamespace(Namespace):
 class GameNamespace(Namespace):
     def on_connect(self):
         print("Game Connect")
-        pass
 
     def on_disconnect(self, reason):
         print("Game Disconnect")
-        pass
+
+    def on_submit_bid(self, data):
+        name = session.get("name")
+        print(f"{name} submit data: {data}")
 
 
 socketio.on_namespace(LobbyNamespace('/lobby'))
