@@ -1,9 +1,12 @@
+const path = require('path');
+
 module.exports = {  
     mode: 'development',  
     entry: './static/js/index.js',  
     output: {  
-      filename: 'main.js',  
-      publicPath: 'dist'  
+      filename: 'main.js',
+      path: path.resolve(__dirname, 'static/js'),  
+      publicPath: '/static/js/'  
     },
     module: {
       rules: [

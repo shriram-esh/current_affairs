@@ -21,6 +21,11 @@
             <li>No players in the room.</li>
         {% endfor %}
     </ul>
+    <div style="width: 800px;">
+        <canvas id="acquisitions"></canvas>
+    </div>
+
     <button>Leave</button>
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

@@ -84,6 +84,9 @@ def lobby():
 @app.route('/game', methods=['GET', 'POST'])
 def game():
     room = session.get("room")
+    name = session.get("name")
+    if room is None or name is None or room not in rooms:
+        return redirect(url_for("index"))
     return render_template('game.html', ctx=rooms[room])
 
 class LobbyNamespace(Namespace):
