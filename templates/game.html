@@ -9,14 +9,15 @@
 </head>
 <body>
     <form method="POST" id="bid-form">
-        <label for="bid">Bid:</label>
-        <input type="text" id="quantity" name="quantity">
-        <input type="text" id="price" name="price">
+        <label for="bid">Quantity:</label><br>
+        <input type="text" id="quantity" name="quantity"><br>
+        <label for="bid">Price:</label><br>
+        <input type="text" id="price" name="price"><br>
         <input type="submit" name="bid-submit" value="Submit Bid">
     </form>
     <ul id="player-list">
         {% for player in ctx.players %}
-            <li>{{ player }}</li>
+            <li>{{ player["username"] }}</li>
         {% else %}
             <li>No players in the room.</li>
         {% endfor %}

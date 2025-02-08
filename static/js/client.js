@@ -10,7 +10,7 @@ $(document).ready(function() {
 
         $('#player-list').empty();
         $.each(data["players"], function (index, player) {
-            $('#player-list').append(`<li>${player}</li>`); 
+            $('#player-list').append(`<li>${player["username"]}</li>`); 
         });
     });
 
