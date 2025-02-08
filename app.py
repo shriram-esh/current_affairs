@@ -46,7 +46,7 @@ def index():
                         }
             session["room"] = room
             session["name"] = username
-            rooms[room]["players"].append(username)
+            rooms[room]["players"].append({"username": username})
             print(rooms[room]["players"])
             return redirect(url_for('lobby'))
         elif action == "Join Room":
@@ -57,7 +57,7 @@ def index():
             if code in rooms:
                 session["room"] = code
                 session["name"] = username
-                rooms[code]["players"].append(username)
+                rooms[code]["players"].append({"username": username})
                 return redirect(url_for('lobby'))
             else: 
                 context = { "err": True, "msg": "Room does not exist" }
@@ -78,7 +78,8 @@ def lobby():
         if action == 'leave': 
             return redirect(url_for('index'))
     
-    context={ "room": room, "name": name }
+    context={ "room": room }
+    print(context)
     return render_template('lobby.html', ctx=context)
 
 @app.route('/game', methods=['GET', 'POST'])
@@ -117,7 +118,18 @@ class LobbyNamespace(Namespace):
 
 class GameNamespace(Namespace):
     def on_connect(self):
-        print("Game Connect")
+        room = session.get("room")
+        name = session.get("name")
+        sid = request.sid
+
+        if room in rooms:
+            for player in rooms[room]["players"]:
+                if player["username"] == name:
+                    player["sid"] = sid
+                    print(f"User {name} SID added: {sid}")
+                    break
+        else:
+            disconnect()
 
     def on_disconnect(self, reason):
         print("Game Disconnect")
