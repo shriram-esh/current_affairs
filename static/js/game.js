@@ -1,4 +1,4 @@
-import { io } from "https://cdn.socket.io/4.8.1/socket.io.esm.min.js";
+import { updateGraph } from './index.js';
 
 $(document).ready(function() {
 
@@ -9,5 +9,9 @@ $(document).ready(function() {
         const formData = $('#bid-form').serialize();
         socket.emit('submit_bid', { data: formData });
         $('#bid-form')[0].reset();
+    });
+
+    socket.on('round_over', (data) => {
+
     });
 });
