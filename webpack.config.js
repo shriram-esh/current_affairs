@@ -1,12 +1,16 @@
 const path = require('path');
+// Remove debug from socket.io library
 
 module.exports = {  
     mode: 'development',  
-    entry: './static/js/index.js',  
+    entry: './static/js/game.js',  
     output: {  
-      filename: 'main.js',
+      filename: 'marketGame.js',
       path: path.resolve(__dirname, 'static/js'),  
       publicPath: '/static/js/'  
+    },
+    externals: {
+      'socket.io-client': 'io',
     },
     module: {
       rules: [

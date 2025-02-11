@@ -75,3 +75,7 @@ const config = {
 /* </block:config> */
 
 export { config };
+export function updateChartData(newData) {
+  // Format: [{x: 'User1', y: quantity1}, {x: 'User2', y: 10}]
+  data.datasets[0].data = newData;
+}
