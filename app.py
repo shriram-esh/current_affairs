@@ -1,6 +1,7 @@
 from flask import Flask, request, session, render_template, redirect, url_for
 from flask_socketio import SocketIO, Namespace, send, emit, join_room, leave_room, disconnect
 from dotenv import load_dotenv
+from optimize import MarketRound
 import os
 import random
 import string
@@ -111,6 +112,8 @@ class LobbyNamespace(Namespace):
         
     def on_start_game(self, data):
         room = session.get("room")
+
+        # randomize quantity and portfolio for everyone
         
         if room in rooms and rooms[room]["players"]:
             socketio.emit('game_start', {'message': 'Game is starting!'}, namespace='/lobby', to=room)
@@ -126,7 +129,7 @@ class GameNamespace(Namespace):
             for player in rooms[room]["players"]:
                 if player["username"] == name:
                     player["sid"] = sid
-                    print(f"User {name} SID added: {sid}")
+                    print(f"User {name} SID updated: {sid}")
                     break
         else:
             disconnect()
