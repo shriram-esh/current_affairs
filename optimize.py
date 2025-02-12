@@ -85,4 +85,6 @@ class MarketRound:
             Note* SLSQP for the 'method' is a good choice for solving an equality and inequality constraint.
         '''
 
-        return minimize(self.objective_fcn, self.initial, method='SLSQP', bounds=self.bounds, constraints=self.constraints)
+        result = minimize(self.objective_fcn, self.initial, method='SLSQP', bounds=self.bounds, constraints=self.constraints)
+        print(result)
+        return np.round(result['x'], decimals=0)
