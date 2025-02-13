@@ -86,5 +86,4 @@ class MarketRound:
         '''
 
         result = minimize(self.objective_fcn, self.initial, method='SLSQP', bounds=self.bounds, constraints=self.constraints)
-        print(result)
         return np.round(result['x'], decimals=0)

@@ -1,26 +1,43 @@
 import Chart from 'chart.js/auto';
 import annotationPlugin from 'chartjs-plugin-annotation';
-import { config, updateChartData } from './chartSetup.js';
+import { config } from './chartSetup.js';
 
 Chart.register(annotationPlugin);
 
-new Chart(document.getElementById('acquisitions'), config);
+const chart = new Chart(document.getElementById('acquisitions'), config);
 
-export function updateGraph(data) {
-    // // Example of changing the chart's data
-    // function changeChartData() {
-    //     const newData = [
-    //       {x: 'Sales', y: 30}, 
-    //       {x: 'Revenue', y: 40}
-    //     ];
+export function updateGraph(inData) {
+    //  Format: 
+    //  {
+    //      demandCutOff: 20,
+    //      priceCutOff: 50,
+    //      bids: [
+    //              {bidQuantity: 'quantity1', bidPrice: price1, player: 'User1'},
+    //              {bidQuantity: 'quantity2', bidPrice: price2, player: 'User2'}
+    //            ]
+    //  }
+
+    //  User Auction Bids
+    console.log(`Update Graph Data: \n${inData.demandCutOff}\n${inData.priceCutOff}`)
+
+    const inputData = inData["bids"];
+    const labels = [];
+    inputData.forEach(bid => {
+        labels.push(`${bid["player"]} Quantity: ${bid["bidQuantity"]}`)
+    });
+
+    console.log(inputData)
+    console.log(labels)
+    chart.data.datasets[0].data = inputData;
+    chart.data.labels = labels
+
+    // Market Price Line
+    const marketPrice = chart.options.plugins.annotation.annotations[Object.keys(chart.options.plugins.annotation.annotations)[0]];
+    // const marketDemand = chart.options.plugins.annotation.annotations[Object.keys(chart.options.plugins.annotation.annotations)[1]];
+    marketPrice.value = inData["priceCutOff"];
+    // marketDemand.value = inData["marketDemand"];
+
+    chart.update();
     
-    //     // Update the chart data
-    //     updateChartData(newData);
-    
-    //     // Update the chart view
-    //     myChart.update();
-    //   }
-    
-    //   // Trigger changeChartData when needed
-    //   document.getElementById('changeDataButton').addEventListener('click', changeChartData);
+    // document.getElementById('changeDataButton').addEventListener('click', changeChartData);
 }
