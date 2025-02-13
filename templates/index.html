@@ -17,6 +17,11 @@
                     <h2 class="sub-title">An Electricity Market Game</h2>
                 </div>
                 <form class="form-container" method="POST">
+                    <div class="error-container">
+                        {% if ctx.err %}
+                            <p class="error-item">{{ ctx.msg }}</p>
+                        {% endif %}
+                    </div>
                     <div class="form-items initial">
                         <label for="username">Username:</label>
                         <input type="text" id="username" name="username" autocomplete="off" placeholder="E.g. John, Anna, etc." value="{{ request.form['username'] }}">
@@ -32,8 +37,5 @@
                 </form>
             </div>
         </div>
-        {% if ctx.err %}
-            <p style="color: red">{{ ctx.msg }}</p>
-        {% endif %}
     </body>
 </html>
