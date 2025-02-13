@@ -1,22 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
    <head>
-      <meta charset="UTF-8">
-      <title>Join Screen</title>
+        <meta charset="UTF-8">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="/static/css/html5reset.css">
+        <link rel="stylesheet" href="/static/css/index.css">
+        <title>Join Screen</title>
     </head>
     <body>
-        <h1>Current Affairs</h1>
-        <form method="POST">
-            <label for="username">Username:</label>
-            <input type="text" id="username" name="username" value="{{ request.form['username'] }}"><br>
-
-            <label for="create-room">Create Room:</label>
-            <input type="submit" name="action" value="Create Room"><br>
-
-            <label for="join-code">Room Code:</label>
-            <input type="text" id="join-code" name="join-code" value="{{ request.form['join-code'] }}">
-            <input type="submit" name="action" value="Join Room">
-        </form>
+        <div class="main-container">
+            <div class="login-container">
+                <div class="title-container">
+                    <h1 class="title">Current Affairs</h1>
+                    <h2 class="sub-title">An Electricity Market Game</h2>
+                </div>
+                <form class="form-container" method="POST">
+                    <div class="form-items initial">
+                        <label for="username">Username:</label>
+                        <input type="text" id="username" name="username" autocomplete="off" placeholder="E.g. John, Anna, etc." value="{{ request.form['username'] }}">
+                    </div>
+                    <div class="form-items">
+                        <input type="submit" name="action" value="Create Room">
+                    </div>
+                    <hr class="hr-text" data-content="OR">
+                    <div class="form-items">
+                        <input type="text" id="join-code" name="join-code" autocomplete="off" placeholder="E.g. 'AJVG'" value="{{ request.form['join-code'] }}">
+                        <input type="submit" name="action" value="Join Room">
+                    </div>
+                </form>
+            </div>
+        </div>
         {% if ctx.err %}
             <p style="color: red">{{ ctx.msg }}</p>
         {% endif %}
