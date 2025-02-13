@@ -126,4 +126,8 @@ input[type="text"] {
       color: var(--hr-color);
       background-color: var(--login-background);
     }
-  }
+}
+
+.error-item {
+    color: red;
+}
