@@ -1,3 +1,4 @@
+import { io } from 'socket.io-client';
 import { updateGraph } from './index.js';
 
 $(document).ready(function() {
@@ -12,6 +13,11 @@ $(document).ready(function() {
     });
 
     socket.on('round_over', (data) => {
+        console.log(`Round Over! Data: ${data}`)
+        updateGraph(data);
+    });
 
+    socket.on('bid_status', (data) => {
+        console.log(data["message"])
     });
 });

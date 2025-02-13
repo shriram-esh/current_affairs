@@ -2,6 +2,10 @@ from flask import Flask, request, session, render_template, redirect, url_for
 from flask_socketio import SocketIO, Namespace, send, emit, join_room, leave_room, disconnect
 from dotenv import load_dotenv
 from optimize import MarketRound
+from urllib.parse import parse_qs
+import numpy as np
+from scipy.optimize import linprog
+import random
 import os
 import random
 import string
@@ -42,12 +46,22 @@ def index():
             rooms[room]={
                             "players": [], 
                             "game": {
-                                        "started": False
+                                        "started": False,
+                                        "hasDemand": False,
+                                        "curDemand": 0,
+                                        "pastRounds": []
                                     }
                         }
             session["room"] = room
             session["name"] = username
-            rooms[room]["players"].append({"username": username})
+            rooms[room]["players"].append(  
+                                            {
+                                                "username": username,
+                                                "bidPrice": 0,
+                                                "bidQuantity": 0,
+                                                "hasBid": False
+                                            }
+                                        )
             print(rooms[room]["players"])
             return redirect(url_for('lobby'))
         elif action == "Join Room":
@@ -58,7 +72,14 @@ def index():
             if code in rooms:
                 session["room"] = code
                 session["name"] = username
-                rooms[code]["players"].append({"username": username})
+                rooms[code]["players"].append(  
+                                                {
+                                                    "username": username,
+                                                    "bidPrice": 0,
+                                                    "bidQuantity": 0,
+                                                    "hasBid": False
+                                                }
+                                            )
                 return redirect(url_for('lobby'))
             else: 
                 context = { "err": True, "msg": "Room does not exist" }
@@ -125,6 +146,8 @@ class GameNamespace(Namespace):
         name = session.get("name")
         sid = request.sid
 
+        join_room(room)
+
         if room in rooms:
             for player in rooms[room]["players"]:
                 if player["username"] == name:
@@ -135,15 +158,93 @@ class GameNamespace(Namespace):
             disconnect()
 
     def on_disconnect(self, reason):
+        room = session.get("room")
+        leave_room(room)
         print("Game Disconnect")
 
     def on_submit_bid(self, data):
+        room = session.get("room")
         name = session.get("name")
-        print(f"{name} submit data: {data}")
 
+        if not rooms[room]["game"]["hasDemand"]:
+            rooms[room]["game"]["curDemand"] = random.randint(100, 120)
+            rooms[room]["game"]["hasDemand"] = True
+
+        parsed_data = parse_qs(data.get('data', ''))
+        parsed_data_clean = {}
+        for key, values in parsed_data.items():
+            try:
+                # Try converting the value to an int
+                parsed_data_clean[key] = int(values[0])
+            except ValueError:
+                try:
+                    # If that fails, try converting the value to a float
+                    parsed_data_clean[key] = float(values[0])
+                except ValueError:
+                    # If both conversions fail, keep it as original type
+                    parsed_data_clean[key] = values[0]
+
+        if room in rooms:
+            for player in rooms[room]["players"]:
+                if player["username"] == name and not player["hasBid"]:
+                    player["bidPrice"] = parsed_data_clean["price"]
+                    player["bidQuantity"] = parsed_data_clean["quantity"]
+                    player["hasBid"] = True
+                    socketio.emit('bid_status', {'message': 'Bid successful!'}, namespace='/game', to=player["sid"])
+                elif player["hasBid"]:
+                    socketio.emit('bid_status', {'message': 'Already placed bid. Wait till next round!'}, namespace='/game', to=player["sid"])
+        else:
+            disconnect()
+        print(f"{name} submit data: {parsed_data_clean}")
+
+        # Check if everyone has voted
+        if all(player["hasBid"] for player in rooms[room]["players"]):
+            bids = [player["bidPrice"] for player in rooms[room]["players"]]
+            quantity = [player["bidQuantity"] for player in rooms[room]["players"]]
+            demand = rooms[room]["game"]["curDemand"]
+
+            try:
+                marketOutcome = MarketRound(bids, quantity, demand)
+            except (TypeError, ValueError) as e:
+                print(f"Error: {e}")
+            result = marketOutcome.get_result()
+
+            c = bids #prices
+            u = quantity #quantities of each good
+            b_eq = [demand, 0]
+            
+
+            #l = [0]*len(c)
+            A_eq = [[1]*len(c), [0]*len(c)]
+            bounds = []
+            for upper_bound in u:
+                bounds.append((0, upper_bound))
+
+            #define the quantities cleared and market price  USING MAGIC
+            res = linprog(c, A_eq=A_eq, b_eq=b_eq, bounds=bounds)
+            print(f"The marginal returned from LinProg: {res.eqlin['marginals']}")
+            market_price = res.eqlin["marginals"][0]
+            print(f"The vector x returned from LinProg{res.x}\n\n")
+            x = res.x
+
+            player_prices = [
+                {"bidQuantity": bid, "bidPrice": player["bidPrice"], "player": player["username"]} 
+                for player, bid in zip(rooms[room]["players"], x)
+            ]
+
+            sorted_player_prices = sorted(player_prices, key=lambda item: item["bidPrice"])
+
+            data =  {
+                        "demandCutOff": demand,
+                        "priceCutOff": market_price,
+                        "bids": sorted_player_prices
+                    }
+            
+            print(f"round over: \n{data}\n{room}")
+            socketio.emit('round_over', data, namespace='/game', to=room)
 
 socketio.on_namespace(LobbyNamespace('/lobby'))
 socketio.on_namespace(GameNamespace('/game'))
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0')
+    socketio.run(app, host='0.0.0.0', port=5000, debug=True)

@@ -1,15 +1,8 @@
-// <block:setup:2>
-const nums = [65, 59, 80, 81, 56, 55, 40];
-
-const labels = [];
-for (let i = 0; i < nums.length; ++i) {
-  labels.push('' + i);
-}
-
 const data = {
+  labels: [],
   datasets: [{
     label: 'Electricity Market Round 1',
-    data: [{x: 'Sales', y: 20}, {x: 'Revenue', y: 10}],
+    data: [],
     backgroundColor: [
       'rgba(255, 99, 132, 0.2)',
       'rgba(255, 159, 64, 0.2)',
@@ -28,44 +21,55 @@ const data = {
       'rgb(153, 102, 255)',
       'rgb(201, 203, 207)'
     ],
+    maxBarThickness: 100,
     borderWidth: 1,
-    barPercentage: 1.0,
-    categoryPercentage: 1.0
   }]
 };
 // </block:setup>
 
 // <block:annotation:1>
-const annotation = {
+const annotation1 = {
     type: 'line',
     borderColor: 'black',
     borderWidth: 3,
     scaleID: 'y',
-    value: 10
+    value: 0
 };
-// </block:annotation>
 
 /* <block:config:0> */
 const config = {
   type: 'bar',
   data: data,
   options: {
+    indexAxis: 'x',
+    datasets: {
+      bar: {
+        barPercentage: 1,
+        categoryPercentage: 1
+      }
+    },
     scales: {
       y: {
+        max: 150,
         beginAtZero: true
       }
+    },
+    parsing: {
+      xAxisKey: 'bidQuantity',
+      yAxisKey: 'bidPrice'
     },
     plugins: {
       annotation: {
         annotations: {
-          annotation
+          annotation1,
+          // annotation2
         }
       },
       tooltip: {
         callbacks: {
           label: function(context) {
-            const value = context.raw.y;
-            return `${value} units`;
+            const value = context.raw.bidPrice;
+            return `$${value}`;
           }
         }
       }
@@ -75,7 +79,3 @@ const config = {
 /* </block:config> */
 
 export { config };
-export function updateChartData(newData) {
-  // Format: [{x: 'User1', y: quantity1}, {x: 'User2', y: 10}]
-  data.datasets[0].data = newData;
-}

@@ -9,9 +9,6 @@ module.exports = {
       path: path.resolve(__dirname, 'static/js'),  
       publicPath: '/static/js/'  
     },
-    externals: {
-      'socket.io-client': 'io',
-    },
     module: {
       rules: [
         {
