@@ -21,8 +21,7 @@ const data = {
       'rgb(153, 102, 255)',
       'rgb(201, 203, 207)'
     ],
-    maxBarThickness: 100,
-    borderWidth: 1,
+    borderWidth: 1
   }]
 };
 // </block:setup>
