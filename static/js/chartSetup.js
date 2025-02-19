@@ -1,3 +1,17 @@
+// categoryPercentage is 1 
+// barPercentage is 1 
+// 1 * 1 * 1 = 1
+// 1 / 2 = 0.5
+
+
+function indexToMin(index) {
+  return index - 0.5;
+}
+
+function indexToMax(index) {
+  return index + 0.5;
+}
+
 const data = {
   labels: [],
   datasets: [{
@@ -31,8 +45,28 @@ const annotation1 = {
     type: 'line',
     borderColor: 'black',
     borderWidth: 3,
+    borderDash: [5, 5],
     scaleID: 'y',
     value: 0
+};
+
+const annotation2 = {
+  type: 'line',
+  borderColor: 'green',
+  borderWidth: 3,
+  xMax: indexToMin(1), // corresponds to first bar. 1 will be 2nd... so on
+  xMin: indexToMin(1),
+  xScaleID: 'x',
+  yMax: 10000,
+  yMin: 0,
+  yScaleID: 'y',
+  label: {
+    display: false,
+    backgroundColor: 'green',
+    borderRadius: 0,
+    color: 'white',
+    content: '10'
+  },
 };
 
 /* <block:config:0> */
@@ -61,7 +95,7 @@ const config = {
       annotation: {
         annotations: {
           annotation1,
-          // annotation2
+          annotation2 
         }
       },
       tooltip: {

@@ -15,6 +15,8 @@
         <input type="text" id="price" name="price"><br>
         <input type="submit" name="bid-submit" value="Submit Bid">
     </form>
+    <div id="bidMsg">
+    </div>
     <ul id="player-list">
         {% for player in ctx.players %}
             <li>{{ player["username"] }}</li>
@@ -22,10 +24,17 @@
             <li>No players in the room.</li>
         {% endfor %}
     </ul>
+    <ul id="playerProfits">
+        
+    </ul>
+    <div id="graphContent">
+        <p id="demandCutOff"></p>
+        <p id="priceCutOff"></p>
+    </div>
     <div style="width: 800px;">
         <canvas id="acquisitions"></canvas>
     </div>
 
-    <button>Leave</button>
+    <button id="leave-btn">Leave</button>
 </body>
 </html>
