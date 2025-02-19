@@ -1,5 +1,6 @@
 from flask import Flask, request, session, render_template, redirect, url_for
 from flask_socketio import SocketIO, Namespace, send, emit, join_room, leave_room, disconnect
+from functools import wraps
 from dotenv import load_dotenv
 from optimize import MarketRound
 from urllib.parse import parse_qs
@@ -14,7 +15,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
-socketio = SocketIO(app, cors_allowed_origins='*')
+socketio = SocketIO(app, cors_allowed_origins='*', manage_session=False)
 
 rooms = {}
 
@@ -25,15 +26,42 @@ def generate_code():
             break
     return code
 
+def login_required(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        room = session.get("room")
+        name = session.get("name")
+        print(f"Room: {room} Name: {name}")
+        if room is None or name is None or room not in rooms:  # Check if user is in session
+            print("'index' check")
+            if request.endpoint != "index":
+                print("Redirect to 'index'")
+                return redirect(url_for("index"))  # Redirect to login if not logged in
+        elif not rooms[room]["game"]["started"]: # Check if game is still in lobby
+            print("'lobby' check")
+            if request.endpoint != "lobby":
+                print("Redirect to 'lobby'")
+                return redirect(url_for("lobby"))
+        elif rooms[room]["game"]["started"]:
+            print("'game' check")
+            if request.endpoint != "game":
+                print("Redirect to 'game'")
+                return redirect(url_for("game"))
+    
+        return f(*args, **kwargs)  # Otherwise, proceed to the game
+    return decorated_function
+
+@app.route("/logout")
+def logout():
+    session.pop("name", None)  
+    return redirect(url_for("index"))
+
 @app.route('/', methods=['GET', 'POST'])
+@login_required
 def index():
     room = session.get("room")
     name = session.get("name")
-    if room in rooms and name in rooms[room]["players"]:
-        rooms[room]["players"].remove(name)
-        if len(rooms[room]["players"]) == 0:
-            del rooms[room]
-    session.clear()
+
     if request.method == 'POST':
         username = request.form.get('username')
         action = request.form.get('action')
@@ -54,15 +82,15 @@ def index():
                         }
             session["room"] = room
             session["name"] = username
-            rooms[room]["players"].append(  
-                                            {
-                                                "username": username,
-                                                "bidPrice": 0,
-                                                "bidQuantity": 0,
-                                                "hasBid": False
-                                            }
-                                        )
-            print(rooms[room]["players"])
+            # rooms[room]["players"].append(  
+            #                                 {
+            #                                     "username": username,
+            #                                     "bidPrice": 0,
+            #                                     "bidQuantity": 0,
+            #                                     "hasBid": False
+            #                                 }
+            #                             )
+            # print(rooms[room]["players"])
             return redirect(url_for('lobby'))
         elif action == "Join Room":
             code = request.form.get('join-code')
@@ -72,14 +100,14 @@ def index():
             if code in rooms:
                 session["room"] = code
                 session["name"] = username
-                rooms[code]["players"].append(  
-                                                {
-                                                    "username": username,
-                                                    "bidPrice": 0,
-                                                    "bidQuantity": 0,
-                                                    "hasBid": False
-                                                }
-                                            )
+                # rooms[code]["players"].append(  
+                #                                 {
+                #                                     "username": username,
+                #                                     "bidPrice": 0,
+                #                                     "bidQuantity": 0,
+                #                                     "hasBid": False
+                #                                 }
+                #                             )
                 return redirect(url_for('lobby'))
             else: 
                 context = { "err": True, "msg": "Room does not exist" }
@@ -88,6 +116,7 @@ def index():
     return render_template('index.html', ctx=context)
 
 @app.route('/lobby', methods=['GET', 'POST'])
+@login_required
 def lobby():
     room = session.get("room")
     name = session.get("name")
@@ -98,13 +127,14 @@ def lobby():
         action = request.form.get('action')
 
         if action == 'leave': 
-            return redirect(url_for('index'))
+            return redirect(url_for('logout'))
     
     context={ "room": room }
     print(context)
     return render_template('lobby.html', ctx=context)
 
 @app.route('/game', methods=['GET', 'POST'])
+@login_required
 def game():
     room = session.get("room")
     name = session.get("name")
@@ -117,10 +147,21 @@ class LobbyNamespace(Namespace):
         room = session.get("room")
         name = session.get("name")
 
-        print(f"User {name} joined room {room}")
-        join_room(room)
-        socketio.emit("user_change", rooms[room], namespace='/lobby', to=room)
-        
+        if room in rooms and name:
+            print(f"User {name} joined room {room}")
+            print(rooms[room])
+            join_room(room)
+            rooms[room]["players"].append(  
+                                            {
+                                                "username": name,
+                                                "bidPrice": 0,
+                                                "bidQuantity": 0,
+                                                "hasBid": False
+                                            }
+                                        )
+            socketio.emit("user_change", rooms[room], namespace='/lobby', to=room)
+        else:
+            socketio.emit("player_left", {'msg': "gone"}, namespace='/lobby', to=request.sid)
 
     def on_disconnect(self, reason):
         room = session.get("room")
@@ -128,9 +169,23 @@ class LobbyNamespace(Namespace):
 
         print(f"User {name} left room {room}")
         leave_room(room)
+        
+        if rooms[room]["game"]["started"]:
+            return
+
+        if room in rooms:
+            for player in rooms[room]["players"]:
+                if player["username"] == name:
+                    rooms[room]["players"].remove(player)
+                    break
+        
+        if len(rooms[room]["players"]) == 0:
+            print(f"Delete room {room}")
+            del rooms[room]
+
         if room in rooms and rooms[room]["players"]:
             socketio.emit("user_change", rooms[room], namespace='/lobby', to=room)
-        
+
     def on_start_game(self, data):
         room = session.get("room")
 
@@ -147,6 +202,8 @@ class GameNamespace(Namespace):
         sid = request.sid
 
         join_room(room)
+
+        print(f"User: {name} Room: {room} SID: {sid}")
 
         if room in rooms:
             for player in rooms[room]["players"]:
@@ -203,16 +260,15 @@ class GameNamespace(Namespace):
             quantity = [player["bidQuantity"] for player in rooms[room]["players"]]
             demand = rooms[room]["game"]["curDemand"]
 
-            try:
-                marketOutcome = MarketRound(bids, quantity, demand)
-            except (TypeError, ValueError) as e:
-                print(f"Error: {e}")
-            result = marketOutcome.get_result()
+            # try:
+            #     marketOutcome = MarketRound(bids, quantity, demand)
+            # except (TypeError, ValueError) as e:
+            #     print(f"Error: {e}")
+            # result = marketOutcome.get_result()
 
             c = bids #prices
             u = quantity #quantities of each good
             b_eq = [demand, 0]
-            
 
             #l = [0]*len(c)
             A_eq = [[1]*len(c), [0]*len(c)]
@@ -234,10 +290,18 @@ class GameNamespace(Namespace):
 
             sorted_player_prices = sorted(player_prices, key=lambda item: item["bidPrice"])
 
+            bid_totals = [
+                {"player": player["player"], "total": player["bidQuantity"] * player["bidPrice"]}
+                for player in player_prices
+            ]
+            
             data =  {
-                        "demandCutOff": demand,
-                        "priceCutOff": market_price,
-                        "bids": sorted_player_prices
+                        "graphData":{
+                                        "demandCutOff": demand,
+                                        "priceCutOff": market_price,
+                                        "bids": sorted_player_prices
+                                    },
+                        "playerProfits": bid_totals
                     }
             
             print(f"round over: \n{data}\n{room}")

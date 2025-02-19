@@ -5,6 +5,10 @@ $(document).ready(function() {
 
     const socket = io("/game");
 
+    $('#leave-btn').on("click", () => {
+        location.href = "/logout";
+    });
+
     $('#bid-form').submit((e) => {
         e.preventDefault();
         const formData = $('#bid-form').serialize();
@@ -13,11 +17,18 @@ $(document).ready(function() {
     });
 
     socket.on('round_over', (data) => {
-        console.log(`Round Over! Data: ${data}`)
-        updateGraph(data);
+        // console.log(`Round Over! Data: ${data.graphData}`)
+        // console.log(`Player Bids: ${data.playerProfits}`)
+        console.log(data.playerProfits)
+        $('#bidMsg').empty();
+        $('#demandCutOff').html(`<p>Demand Cut Off: ${data["graphData"]["demandCutOff"]}</p>`);
+        $('#priceCutOff').html(`<p>Price Cut Off: ${data["graphData"]["priceCutOff"]}</p>`);
+        const profits = data["playerProfits"].map(p => `<li>${p["player"]}: ${p["total"]}</li>`).join("");
+        $('#playerProfits').html(profits);
+        updateGraph(data["graphData"]);
     });
 
     socket.on('bid_status', (data) => {
-        console.log(data["message"])
+        $('#bidMsg').html(`<p>${data.message}</p>`);
     });
 });

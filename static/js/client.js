@@ -4,6 +4,11 @@ $(document).ready(function() {
 
     const socket = io("/lobby");
 
+    socket.on('player_left', (data) => {
+        console.log("Last player")
+        location.href = '/logout'; 
+    });
+
     socket.on('user_change', (data) => {
         console.log(data);
         $("#player-total").html(data["players"].length);
@@ -20,6 +25,6 @@ $(document).ready(function() {
     });
 
     socket.on('game_start', (data) => {
-        window.location.href = '/game'; 
+        location.href = '/game'; 
     });
 });

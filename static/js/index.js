@@ -33,8 +33,12 @@ export function updateGraph(inData) {
 
     // Market Price Line
     const marketPrice = chart.options.plugins.annotation.annotations[Object.keys(chart.options.plugins.annotation.annotations)[0]];
+    // Demand Line
+    const demand = chart.options.plugins.annotation.annotations[Object.keys(chart.options.plugins.annotation.annotations)[1]];
     // const marketDemand = chart.options.plugins.annotation.annotations[Object.keys(chart.options.plugins.annotation.annotations)[1]];
     marketPrice.value = inData["priceCutOff"];
+    demand.label.display = true;
+    demand.label.content = inData["demandCutOff"];
     // marketDemand.value = inData["marketDemand"];
 
     chart.update();
