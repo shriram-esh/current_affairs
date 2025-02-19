@@ -8,7 +8,7 @@ class Data:
     
     def __init__(self, name, bid_size, profit): #GIVE PLAYERS AN INITIAL CAPITAL
         self.name = name #identify the player
-        self.bids = [bid(0,0,0,0)]*bid_size
+        self.bids = []*bid_size
         self.profit = profit
         self.hist = []
 
@@ -25,11 +25,12 @@ class History:
     def __init__(self, profit, round_num):
         # self.price = price
         # self.quantity_cleared = quantity_cleared
+        #self.bids = bids
         self.profit = profit
         self.round_num = round_num
 
     def __str__(self):
-         return f"Ended round {self.round_num+1} with ${self.profit}"
+         return f"ended round {self.round_num+1} with ${self.profit}"
         # return f"Cleared {self.quantity} units at ${self.price}, ending the round with ${self.profit}"
 
 
@@ -60,11 +61,18 @@ def define_players(starting_units):
         profit = random.randint(int(market_cap/4), market_cap)
         data_list.append(Data(name, starting_units, profit))
 
+        # print(f"you start with ${profit}")
+        # for j in range(starting_units):
         for j in range(starting_units):
-            rand_elem = random.randint(0, len(assets)-1)
-            for b in data_list[i].bids:
-                b.asset = (rand_elem)
-                b.units = (random.randint(1, cap_initial_units)) 
+            #rand_elem = random.randint(0, len(assets)-1)
+            data_list[i].bids.append(bid(0,0,0,0))
+            data_list[i].bids[j].asset = int(random.randint(0, len(assets)-1))
+            data_list[i].bids[j].units = int(random.randint(1, cap_initial_units))
+            # print(f"and {data_list[i].bids[j].units} units of {assets[data_list[i].bids[j].asset][0]}")
+
+        # for b in data_list[i].bids:    
+        #     print(f"and {b.units} units of {assets[b.asset][0]} who's cost of generation is {assets[b.asset][1]} and who's max generation is {assets[b.asset][2]}")
+        # print("")
 
         print(f"you start with ${profit}")
         for k in range(starting_units):
@@ -116,6 +124,7 @@ def print_results(Demand, market_price, data_list):
 def update_history(data_list, round_num):
     for temp in (data_list):
         (temp.hist).append(History(temp.profit, round_num))
+        
 
 
 
@@ -141,7 +150,7 @@ def playRound(starting_units, market_cap, players, ids, round_num):
     for upper_bound in u:
                 bounds.append((0, upper_bound))
 
-    #define the quantities cleared and market price  USING MAGIC
+    #define the quantities cleared and market price USING MAGIC
     res = linprog(c, A_eq=A_eq, b_eq=b_eq, bounds=bounds)
     print(f"The marginal returned from LinProg: {res.eqlin["marginals"]}")
     market_price = res.eqlin["marginals"][0]
@@ -149,11 +158,11 @@ def playRound(starting_units, market_cap, players, ids, round_num):
     x = res.x
 
     #calculate people's profits
-    count =0 #parsing the x vector
+    count = 0 #parsing the x vector
     for person in players:
         for b in person.bids:
             if count < len(x):
-                person.profit += ((market_price - b.price)*x[count]) - assets[b.asset][1] #SHOULD THE COST OF GENERATION BE USED TO SUBTRACT?
+                person.profit += ((market_price - b.price)*x[count]) - assets[b.asset][1] #SHOULD THE COST OF GENERATION BE USED TO SUBTRACT?((market_price - b.price)*x[count]) - assets[b.asset][1]
             count += 1
 
     # for x in players:
@@ -170,7 +179,9 @@ def playRound(starting_units, market_cap, players, ids, round_num):
 
 
 
-# ids = []
+################
+##MAIN FUNCTION
+################
 how_many_rounds = int(input("Enter the number of rounds to play: "))
 starting_units = int(input("Enter the number of units each player starts with: "))
 market_cap = int(input("Enter the Market Cap: "))
@@ -179,9 +190,11 @@ print(" ")
 players, ids = define_players(starting_units)
 print(ids)
 
-for i in range (how_many_rounds):
-    playRound(starting_units, market_cap, players, ids, i)
+count=0
+while count <how_many_rounds or len(players)==1:
+    playRound(starting_units, market_cap, players, ids, count)
+    count+=1
 
 for p in players:
      for h in p.hist:
-        print(h)
+        print(f"{p.name} {h}")
