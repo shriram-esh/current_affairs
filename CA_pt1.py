@@ -25,12 +25,15 @@ class History:
     def __init__(self, profit, round_num, bids):
         # self.price = price
         # self.quantity_cleared = quantity_cleared
-        self.bids = bids
+        self.bids = bids #what was bid NOT what was cleared
         self.profit = profit
         self.round_num = round_num
 
     def __str__(self):
-         return f"ended round {self.round_num+1} with ${self.profit}"
+        str_to_print = f"\n"
+        for b in self.bids:
+            str_to_print += f"and bid {b.quantity} units of {assets[b.asset][0]} at ${b.price}\n"
+        return f"ended round {self.round_num+1} with ${self.profit} {str_to_print}"
         # return f"Cleared {self.quantity} units at ${self.price}, ending the round with ${self.profit}"
 
 
@@ -38,29 +41,37 @@ class History:
 # each tuple of the form (energy type, cost of generation, max generation)
 
 #ASSETS WE DEFINED FEB 19
-total = 3000
-# assets = [("Wind Power", 0, 0.2*(total)),   #0 
-#           ("Hydropower", 0, 0.1*(total)),   #1
-#           ("Coal", 200, 0.2*(total)),       #2
-#           ("Nuclear", 10, 0.1*(total)),     #3
-#           ("Bio-mass", 30, 0.05*(total)),   #4
-#           ("Gas", 100, 0.30*(total)),       #5
-#           ("Solar", 0, 0.05*(total))]       #6
-        #GIVE EACH POWER PLANT A CAPACITY
+assets = [
+    ("Coal", 140, 2000),                        ("Natural Gas (Combined Cycle)", 120, 1000),
+    ("Natural Gas (Open Cycle)", 150, 500),     ("Nuclear", 90, 600),
+    ("Wind (onshore)", 20, 10),                 ("Wind (Offshore)", 60, 10),
+    ("Soloar Photovoltaic", 30, 500),           ("Concentrated Solar Power", 80, 100),
+    ("Large-Scale Hydropower", 60, 300),        ("Geothermal", 70, 70),
+    ("Biomass (Wood)", 50, 70),                 ("Biomass (Agricultural Waste)",100, 30),
+    ("Biogas (Landfills)", 80, 10),             ("Tidal Power", 150, 3),
+    ("Wave Power", 100, 4),                     ("Hydrogen Fuel Cells", 100, 3),
+    ("Waste-to-Energy (Incineration)", 60, 10), ("Waste-to-Energy (Landfill Gas)", 50, 1),
+    ("Hydrogen Gas Turbine", 70, 200),          ("Compressed Air Energy", 80, 10),
+    ("Pumped Storage Hydroelectric", 40, 100),  ("Shale Oil Power Generation", 100, 10),
+    ("Coal-to-Liquid", 200, 100),               ("Concentrated Solar Thermal", 80, 50),
+    ("Organic Photovoltaic", 100, 1),           ("Microgrids (Renewable)", 75, 5),
+    ("Small Modular Reactors", 90, 100),        ("Ocean Thermal Energy Conversion", 200, 20),
+    (" Algal Biofuel", 150, 20),                ("Magnetohydrodynamic", 150, 100) 
+        ] 
+        # GIVE EACH POWER PLANT A CAPACITY
 
-#ASSETS FROM QUESTION MAKE TO FIZED QUATNTITY INDEASD OF FIXED TOTAL CAN BID UP TO UNITS THEY HAVE (15 or SO)
-assets = [("Wind Power", 75, 0.2*(total)),  #0
-          ("Nuclear", 15, 0.1*(total)),     #1
-          ("Solar", 0, 0.05*(total)),       #2
-          ("CHP", 42, 0.05*(total)),        #3
-          ("Hydropower", 10, 0.1*(total))]  #4
+# #ASSETS FROM QUESTION
+# assets = [("Wind Power", 75, 0.2*(total)),  #0
+#           ("Nuclear", 15, 0.1*(total)),     #1
+#           ("Solar", 0, 0.05*(total)),       #2
+#           ("CHP", 42, 0.05*(total)),        #3
+#           ("Hydropower", 10, 0.1*(total))]  #4
 
 
 ##########################
 #DEFINE THE NUMBER OF PLAYERS AND INITIALIZE THEM
 ##########################
-def define_players(starting_units):
-    cap_initial_units = 10
+def define_players(usable_assets):
     num_players = int(input("Enter the number of players: "))
 
     #prompt for data input into array
@@ -76,32 +87,37 @@ def define_players(starting_units):
 
         ids.append(name)
         profit = 0
-        data_list.append(Data(name, starting_units, profit))
-
-        # print(f"you start with ${profit}")
-        # for j in range(starting_units):
-        for j in range(starting_units):
-            #rand_elem = random.randint(0, len(assets)-1)
-            data_list[i].bids.append(bid(0,0,0,0))
-
-            asset_num = -1
-            while asset_num<0 or asset_num>(len(assets)-1):
-                 asset_num = int(input("Enter the asset number (from the array): "))
-
-            data_list[i].bids[j].asset = asset_num
-            data_list[i].bids[j].units = int(input("Enter the starting number of units: "))
-            # print(f"and {data_list[i].bids[j].units} units of {assets[data_list[i].bids[j].asset][0]}")
-
-        # for b in data_list[i].bids:    
-        #     print(f"and {b.units} units of {assets[b.asset][0]} who's cost of generation is {assets[b.asset][1]} and who's max generation is {assets[b.asset][2]}")
-        # print("")
-
+        data_list.append(Data(name, 1, profit))
         print(f"you start with ${profit}")
-        for k in range(starting_units):
-            print(f"and {data_list[i].bids[k].units} units of {assets[data_list[i].bids[k].asset][0]} who's cost of generation is {assets[data_list[i].bids[k].asset][1]} and who's max generation is {assets[data_list[i].bids[k].asset][2]}")
-        print("")
+        
+        add_asset(usable_assets, data_list[i])
 
     return data_list, ids
+
+#adds one asset to one player
+def add_asset(usable_assets, player):
+    #rand_elem = random.randint(0, len(assets)-1)
+    if len(usable_assets) == 0:
+        usable_assets = list(range(len(assets)))
+
+    
+
+    asset_num = int(random.randint(0,len(usable_assets)-1))#retruns the index of the usable_assets list. at that index is the index of the asset
+
+    player.bids.append(bid(usable_assets[asset_num],int(random.randint(1,10)),0,0))
+    usable_assets.pop(asset_num)
+
+    #player.bids[(len(player.bids)-1)].units = int(input("Enter the starting number of units: "))
+    # print(f"and {player.bids[j].units} units of {assets[player.bids[j].asset][0]}")
+
+    # for b in player.bids:    
+    #     print(f"and {b.units} units of {assets[b.asset][0]} who's cost of generation is {assets[b.asset][1]} and who's max generation is {assets[b.asset][2]}")
+    # print("")
+
+    
+    for b in player.bids:
+        print(f"{player.name} has {b.units} units of {assets[b.asset][0]} who's cost of generation is {assets[b.asset][1]} and who's max generation is {assets[b.asset][2]}")
+    print("")
 
 
 ######################
@@ -124,8 +140,8 @@ def get_bids(players, market_cap): #WHAT IS THE MAX QUANTITY YOU CAN BID? THE NU
             temp.bids[i].price = (float(price))
 
             quantity = ((input(f"{temp.name} enter the quantity of your bid: ")))                 
-            while((not quantity.isdigit()) or (quantity.isdigit() and (float(quantity) < 0 or float(quantity) > assets[temp.bids[i].asset][2]))):
-                    quantity=((input("Please enter a differnt quantity (ensure it is non-negative number below the generator's max generation): ")))
+            while((not quantity.isdigit()) or (quantity.isdigit() and (float(quantity) < 0 or float(quantity) > temp.bids[i].units))): #assets[temp.bids[i].asset][2]) = max generation
+                    quantity=((input("Please enter a differnt quantity (ensure it is non-negative number below the number of units you have): ")))
 
             temp.bids[i].quantity = (float(quantity))
         print(" ")
@@ -159,7 +175,7 @@ def update_history(data_list, round_num):
 
 
 
-def playRound(starting_units, market_cap, players, ids, round_num):
+def playRound(market_cap, players, ids, round_num):
     Demand = int(input("Enter the demand for this round: "))
     get_bids(players, market_cap)
 
@@ -226,24 +242,25 @@ def playRound(starting_units, market_cap, players, ids, round_num):
 ##MAIN FUNCTION
 ################
 how_many_rounds = int(input("Enter the number of rounds to play: "))
-starting_units = int(input("Enter the number of units each player starts with: "))
-market_cap = int(input("Enter the Market Cap: "))
+number_units = 1 #number of units to start with
+market_cap = int(9000) #int(input("Enter the Market Cap: "))
+usable_assets = list(range(len(assets)))
 print(" ")
 
-players, ids = define_players(starting_units)
+players, ids = define_players(usable_assets)
 print(ids)
 
 count=0
 while (count < how_many_rounds) and (len(players)>1):
     print(f"Length of players: {len(players)}")
-    players, ids = playRound(starting_units, market_cap, players, ids, count)
+    players, ids = playRound(market_cap, players, ids, count)
     count+=1
+
+    if count%2 == 0:
+         for p in players:
+              add_asset(usable_assets, p)
 
     print("history up to this point for remaining players: ")
     for p in players:
         for h in p.hist:
-            print(f"{p.name} {h}")
-        #     for b in h.bids:
-        #         print(f"and bid {b.quantity} units of {assets[b.asset][0]} at ${b.price}")
-        #     print("")
-        # print("")
+            print(f"{p.name} {h} \n")
