@@ -121,7 +121,8 @@ def index():
                                         "started": False,
                                         "hasDemand": False,
                                         "curDemand": 0,
-                                        "currentRound": 1
+                                        "currentRound": 1,
+                                        "demandRange": (5,15)
                                     }
                         }
             session["room"] = room
@@ -268,7 +269,8 @@ class GameNamespace(Namespace):
             disconnect()
 
         if not rooms[room]["game"]["hasDemand"]:
-            rooms[room]["game"]["curDemand"] = 4 # random.randint(100, 120) # randomize the demand
+            demandRange = rooms[room]["game"]["demandRange"]
+            rooms[room]["game"]["curDemand"] = random.randint(demandRange[0], demandRange[1]) # randomize the demand
             rooms[room]["game"]["hasDemand"] = True
 
         parsed_data = parse_qs(data.get('data', ''))
@@ -378,6 +380,9 @@ class GameNamespace(Namespace):
                 player.hasBid = False
             rooms[room]["game"]["hasDemand"] = False
             rooms[room]["game"]["currentRound"] += 1
+            if rooms[room]["game"]["currentRound"] % 10 == 1:
+               demandRange = rooms[room]["game"]["demandRange"] 
+               rooms[room]["game"]["demandRange"] = (demandRange[0] + 1, demandRange[1] + 1)
 
 socketio.on_namespace(LobbyNamespace('/lobby'))
 socketio.on_namespace(GameNamespace('/game'))
