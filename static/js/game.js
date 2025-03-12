@@ -12,6 +12,7 @@ $(document).ready(function() {
         $('#asset').html(data["asset"]);
         $('#units').html(data["units"]);
         $('#generation').html(data["generation"]);
+        $('#round').html(data["currentRound"]);
     });
 
     $('#leave-btn').on("click", () => {
@@ -34,14 +35,16 @@ $(document).ready(function() {
         $('#priceCutOff').html(`<p>Price Cut Off: ${data["graphData"]["priceCutOff"]}</p>`);
         const profits = data["playerProfits"].map(p => `<li>${p["player"]}: ${p["total"]}</li>`).join("");
         $('#playerProfits').html(profits);
-        updateGraph(data["graphData"]); 
+        $('#round').html(data["roundNumber"]);
+        updateGraph(data); 
     });
 
     socket.on('bid_status', (data) => {
         $('#bidMsg').html(`<p>${data.message}</p>`);
     });
 
-    function updateGraph(in_data) {
+    function updateGraph(data) {
+        const in_data = data["graphData"]
         const graph = document.querySelector('.bidGraph');
         console.log(in_data["demand"])
         const demand = in_data["demand"]
@@ -51,6 +54,7 @@ $(document).ready(function() {
         const barHeight = in_data["barHeight"] // Height of bar
         const colors = in_data["colors"]
         const players = in_data["players"]
+        const roundNumber = data["roundNumber"]
     
         var data = [
             {
@@ -68,7 +72,7 @@ $(document).ready(function() {
     
         var layout = {
             title: {
-                text: "Electricity Market"
+                text: `Electricity Market Round ${roundNumber - 1}`
             },
             dragmode: false,
             shapes: [

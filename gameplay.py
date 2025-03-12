@@ -64,11 +64,11 @@ assets = [
     ("Coal-to-Liquid", 200, 100),               ("Concentrated Solar Thermal", 80, 50),
     ("Organic Photovoltaic", 100, 1),           ("Microgrids (Renewable)", 75, 5),
     ("Small Modular Reactors", 90, 100),        ("Ocean Thermal Energy Conversion", 200, 20),
-    (" Algal Biofuel", 150, 20),                ("Magnetohydrodynamic", 150, 100) 
+    ("Algal Biofuel", 150, 20),                ("Magnetohydrodynamic", 150, 100) 
 ] 
 
 # GLOBAL VARIABLES
-how_many_rounds = 5
+how_many_rounds = 15
 market_cap = int(9000)
 usable_assets = list(range(len(assets)))
 
