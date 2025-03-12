@@ -120,7 +120,8 @@ def index():
                             "game": {
                                         "started": False,
                                         "hasDemand": False,
-                                        "curDemand": 0
+                                        "curDemand": 0,
+                                        "currentRound": 1
                                     }
                         }
             session["room"] = room
@@ -253,7 +254,8 @@ class GameNamespace(Namespace):
                 data = {
                     "asset": assets[player.bids[0].asset][0],
                     "units": player.bids[0].units,
-                    "generation": assets[player.bids[0].asset][1]
+                    "generation": assets[player.bids[0].asset][1],
+                    "currentRound": rooms[room]["game"]["currentRound"]
                 }
                 socketio.emit('send_stats', data, namespace='/game', to=player.sid)
                 print(f"Sent Stats {data} to {player.name}")
@@ -367,13 +369,15 @@ class GameNamespace(Namespace):
             print(player_profits)
             data =  {
                         "graphData": graphData,
-                        "playerProfits": player_profits
+                        "playerProfits": player_profits,
+                        "roundNumber": rooms[room]["game"]["currentRound"] + 1
                     }
             
             socketio.emit('round_over', data, namespace='/game', to=room)
             for player in rooms[room]["dataList"]:
                 player.hasBid = False
             rooms[room]["game"]["hasDemand"] = False
+            rooms[room]["game"]["currentRound"] += 1
 
 socketio.on_namespace(LobbyNamespace('/lobby'))
 socketio.on_namespace(GameNamespace('/game'))
