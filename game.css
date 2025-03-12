@@ -1,0 +1,107 @@
+:root {
+    --title-color: #EEDF7A;
+    --subTitle-color: #D8A25E;
+    --lobby-background: #343131;
+    --lobby-header: #484444;
+    --player-color: #f0f0f0;
+    --hr-color: black;
+}
+
+body {
+    font-family: "Work Sans", serif;
+    background-color: var(--lobby-background);
+    display: flexbox;
+    justify-content: center;  /* Horizontally centers the content */
+    height: 100vh;  /* Full viewport height */
+}
+
+label{
+    justify-content: center;
+    font-family: "Work Sans", serif;
+    font-size: 1rem;
+    color: var(--subTitle-color);
+}
+
+.round{
+    justify-content: center;
+    font-family: "Work Sans", serif;
+    color: var(--subTitle-color);
+
+}
+
+.info{
+    justify-content: center;
+    font-family: "Work Sans", serif;
+    color: white;
+}
+
+#assets, #units, #generation{
+    justify-content: center;
+    font-family: "Work Sans", serif;
+    color: white;
+}
+
+
+#quantity, #price {
+    box-sizing: border-box;
+    cursor: pointer;
+    padding: 7px;
+    width: 300px;
+    color: var(--hr-color);
+    background-color: var(--title-color);
+    border-radius: 20px;
+    border: none;
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    font-size: 2rem;
+}
+
+#playerProfits{
+    justify-content: center;
+    font-family: "Work Sans", serif;
+    font-size: 3rem;
+    color: var(--title-color);
+}
+
+#player-list {
+    color: var(--player-color);
+    list-style-type: none;
+    height: 200px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    content: left;
+    gap: 40px;
+}
+
+.buttons {
+    display: flex;
+    justify-content: center;
+}
+
+#leave-btn {
+    justify-content: center;
+    box-sizing: border-box;
+    cursor: pointer;
+    padding: 7px;
+    width: 150px;
+    color: white;
+    background-color: rgb(244, 86, 86);
+    border-radius: 20px;
+    border: none;
+}
+#submit {
+    justify-content: center;
+    box-sizing: border-box;
+    cursor: pointer;
+    padding: 7px;
+    width: 150px;
+    color: white;
+    background-color: rgb(45, 192, 60);
+    border-radius: 20px;
+    border: none;
+}
