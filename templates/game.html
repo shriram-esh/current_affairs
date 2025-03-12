@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    <script type="module" src="{{ url_for('static', filename='js/marketGame.js') }}"></script>  
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script type="module" src="{{ url_for('static', filename='js/game.js') }}"></script>  
     <title>Game Screen</title>
 </head>
 <body>
@@ -24,17 +25,8 @@
             <li>No players in the room.</li>
         {% endfor %}
     </ul>
-    <ul id="playerProfits">
-        
-    </ul>
-    <div id="graphContent">
-        <p id="demandCutOff"></p>
-        <p id="priceCutOff"></p>
-    </div>
-    <div style="width: 800px;">
-        <canvas id="acquisitions"></canvas>
-    </div>
-
+    <ul id="playerProfits"></ul>
+    <div class="bidGraph" style="width:1000px;height:600px;"></div>
     <button id="leave-btn">Leave</button>
 </body>
 </html>

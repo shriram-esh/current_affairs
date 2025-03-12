@@ -3,17 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/html5reset.css">
+    <link rel="stylesheet" href="/static/css/lobby.css">
     <script type="module" src="{{ url_for('static', filename='js/client.js') }}"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <title>Lobby</title>
 </head>
 <body>
-    <h1>Lobby: {{ ctx.room }}</h1>
-    <h2>Players: <span id="player-total">0</span></h2>
+    <div class="lobby-header">
+        <h1 class="lobby-title">Lobby: <span class="room-code">{{ ctx.room }}</span></h1>
+        <h2 class="players-title">Players: <span id="player-total">0</span></h2>
+    </div>
     <ul id="player-list"></ul>
-    <button id="start" value="start">Start Game</button>
-    <form method="POST">
-        <button type="submit" id="leave" name="action" value="leave">Leave</button>
-    </form>
+    <div class="buttons">
+        <button id="start" value="start">Start Game</button>
+        <div>
+            <form method="POST">
+                <button type="submit" id="leave" name="action" value="leave">Leave</button>
+            </form>
+        </div>
+    </div>
 </body>
 </html>

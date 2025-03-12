@@ -1,0 +1,87 @@
+:root {
+    --title-color: #EEDF7A;
+    --subTitle-color: #D8A25E;
+    --lobby-background: #343131;
+    --lobby-header: #484444;
+    --player-color: #f0f0f0;
+    --hr-color: black;
+}
+
+body {
+    font-family: "Work Sans", serif;
+    background-color: var(--lobby-background);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 100%;
+}
+
+
+.lobby-header {
+    height: 100px;
+    background-color: var(--lobby-header);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    font-size: 2rem;
+}
+
+.lobby-title {
+    color: var(--title-color);
+}
+
+.room-code {
+    color: var(--subTitle-color);
+}
+
+.players-title {
+    color: var(--title-color);
+}
+
+#player-total {
+    color: var(--subTitle-color);
+}
+
+#player-list {
+    color: var(--player-color);
+    list-style-type: none;
+    height: 200px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+}
+
+.buttons {
+    display: flex;
+    justify-content: center;
+}
+
+#start {
+    box-sizing: border-box;
+    cursor: pointer;
+    padding: 7px;
+    width: 150px;
+    color: white;
+    background-color: rgb(36, 108, 36);
+    border-radius: 20px;
+    border: none;
+}
+
+#leave {
+    box-sizing: border-box;
+    cursor: pointer;
+    padding: 7px;
+    width: 150px;
+    color: white;
+    background-color: rgb(244, 86, 86);
+    border-radius: 20px;
+    border: none;
+}

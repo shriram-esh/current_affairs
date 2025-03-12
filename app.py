@@ -2,7 +2,7 @@ from flask import Flask, request, session, render_template, redirect, url_for
 from flask_socketio import SocketIO, Namespace, send, emit, join_room, leave_room, disconnect
 from functools import wraps
 from dotenv import load_dotenv
-from optimize import MarketRound
+from graph import create_graph
 from urllib.parse import parse_qs
 import numpy as np
 from scipy.optimize import linprog
@@ -25,6 +25,49 @@ def generate_code():
         if code not in rooms:
             break
     return code
+
+def get_random_rgba():
+    r = random.randint(0, 255)  # Random red (0-255)
+    g = random.randint(0, 255)  # Random green (0-255)
+    b = random.randint(0, 255)  # Random blue (0-255)
+    return (r, g, b)
+
+def linprog_to_graph(in_data, in_linprog, demand, marketPrice):
+    cur_width = 0
+    xList = []
+    widthBar = []
+    barHeight = []
+    colors = []
+    for index, p in enumerate(in_data):
+        if in_linprog[index] > 0 and in_linprog[index] < p["bidQuantity"]:
+            # Line intersects bar
+            barHeight.append(p["bidPrice"])
+            xList.append(in_linprog[index] / 2 + cur_width)
+            widthBar.append(in_linprog[index])
+            colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 1)')
+            cur_width += in_linprog[index]
+            barHeight.append(p["bidPrice"])
+            xList.append(((p["bidQuantity"] - in_linprog[index]) / 2 + cur_width))
+            widthBar.append(p["bidQuantity"] - in_linprog[index])
+            colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 0.4)')
+            cur_width += p["bidQuantity"] - in_linprog[index]
+        else:
+            barHeight.append(p["bidPrice"])
+            xList.append(p["bidQuantity"] / 2 + cur_width)
+            widthBar.append(p["bidQuantity"])
+            cur_width += p["bidQuantity"]
+            if in_linprog[index] == 0:
+                colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 0.4)')
+            else:
+                colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 1)')
+    return  {
+                "barHeight": barHeight,
+                "xList": xList,
+                "widthBar": widthBar,
+                "colors": colors,
+                "demand": demand,
+                "marketPrice": marketPrice
+            }
 
 def login_required(f):
     @wraps(f)
@@ -154,6 +197,7 @@ class LobbyNamespace(Namespace):
             rooms[room]["players"].append(  
                                             {
                                                 "username": name,
+                                                "color": get_random_rgba(),
                                                 "bidPrice": 0,
                                                 "bidQuantity": 0,
                                                 "hasBid": False
@@ -248,7 +292,7 @@ class GameNamespace(Namespace):
                     player["bidQuantity"] = parsed_data_clean["quantity"]
                     player["hasBid"] = True
                     socketio.emit('bid_status', {'message': 'Bid successful!'}, namespace='/game', to=player["sid"])
-                elif player["hasBid"]:
+                elif player["username"] == name and player["hasBid"]:
                     socketio.emit('bid_status', {'message': 'Already placed bid. Wait till next round!'}, namespace='/game', to=player["sid"])
         else:
             disconnect()
@@ -256,15 +300,13 @@ class GameNamespace(Namespace):
 
         # Check if everyone has voted
         if all(player["hasBid"] for player in rooms[room]["players"]):
-            bids = [player["bidPrice"] for player in rooms[room]["players"]]
-            quantity = [player["bidQuantity"] for player in rooms[room]["players"]]
+            sorted_player_prices = sorted(rooms[room]["players"], key=lambda item: item["bidPrice"])
+            bids = []
+            quantity = []
+            for player in sorted_player_prices:
+                bids.append(player["bidPrice"])
+                quantity.append(player["bidQuantity"])
             demand = rooms[room]["game"]["curDemand"]
-
-            # try:
-            #     marketOutcome = MarketRound(bids, quantity, demand)
-            # except (TypeError, ValueError) as e:
-            #     print(f"Error: {e}")
-            # result = marketOutcome.get_result()
 
             c = bids #prices
             u = quantity #quantities of each good
@@ -283,29 +325,24 @@ class GameNamespace(Namespace):
             print(f"The vector x returned from LinProg{res.x}\n\n")
             x = res.x
 
-            player_prices = [
-                {"bidQuantity": bid, "bidPrice": player["bidPrice"], "player": player["username"]} 
-                for player, bid in zip(rooms[room]["players"], x)
-            ]
+            print(x)
+            print(sorted_player_prices)
 
-            sorted_player_prices = sorted(player_prices, key=lambda item: item["bidPrice"])
+            graphData = linprog_to_graph(sorted_player_prices, x, demand, market_price)
+            print(graphData)
 
-            bid_totals = [
-                {"player": player["player"], "total": player["bidQuantity"] * player["bidPrice"]}
-                for player in player_prices
-            ]
+            player_profits = []
+            for index, value in enumerate(rooms[room]["players"]):
+                player_profits.append({"player": value["username"], "total": x[index] * value["bidPrice"]})
             
             data =  {
-                        "graphData":{
-                                        "demandCutOff": demand,
-                                        "priceCutOff": market_price,
-                                        "bids": sorted_player_prices
-                                    },
-                        "playerProfits": bid_totals
+                        "graphData": graphData,
+                        "playerProfits": player_profits
                     }
             
-            print(f"round over: \n{data}\n{room}")
             socketio.emit('round_over', data, namespace='/game', to=room)
+            for player in rooms[room]["players"]:
+                player["hasBid"] = False
 
 socketio.on_namespace(LobbyNamespace('/lobby'))
 socketio.on_namespace(GameNamespace('/game'))
