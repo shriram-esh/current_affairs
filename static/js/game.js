@@ -4,6 +4,16 @@ $(document).ready(function() {
 
     const socket = io("/game");
 
+    // Get Initial Game Info
+    socket.emit('get_stats');
+
+    socket.on('send_stats', (data) => {
+        console.log('Received Stats');
+        $('#asset').html(data["asset"]);
+        $('#units').html(data["units"]);
+        $('#generation').html(data["generation"]);
+    });
+
     $('#leave-btn').on("click", () => {
         location.href = "/logout";
     });
@@ -40,16 +50,19 @@ $(document).ready(function() {
         const widthBar = in_data["widthBar"] // Width from left to right
         const barHeight = in_data["barHeight"] // Height of bar
         const colors = in_data["colors"]
+        const players = in_data["players"]
     
         var data = [
             {
-            x: xList,
-            y: barHeight,
-            width: widthBar,
-            marker: {
-                color: colors
-            },
-            type: 'bar'
+                x: xList,
+                y: barHeight,
+                width: widthBar,
+                marker: {
+                    color: colors
+                },
+                type: 'bar',
+                hovertext: widthBar.map((w, i) => `<b>${players[i]}</b><br>Quantity: ${w}<br>Price: ${barHeight[i]}`), 
+                hoverinfo: "text"
             }
         ];
     
@@ -83,6 +96,33 @@ $(document).ready(function() {
                         color: "black",
                         width: 3,
                         dash: "dash"
+                    }
+                }
+            ],
+            annotations: [
+                {
+                    x: Math.max(widthBar.reduce((acc, cur) => acc + cur, 0) * 1.2, demand),  
+                    y: marketPrice,
+                    xanchor: "left",
+                    yanchor: "middle",
+                    text: `Market Price: ${marketPrice}`,
+                    showarrow: false,
+                    font: {
+                        color: "red",
+                        size: 14
+                    }
+                },
+                // Demand Label
+                {
+                    x: demand,
+                    y: Math.max(...barHeight) * 1.2,  
+                    xanchor: "center",
+                    yanchor: "bottom",
+                    text: `Demand: ${demand}`,
+                    showarrow: false,
+                    font: {
+                        color: "black",
+                        size: 14
                     }
                 }
             ]

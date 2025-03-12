@@ -33,6 +33,7 @@ def linprog_to_graph(in_data, in_linprog, demand, marketPrice):
     widthBar = []
     barHeight = []
     colors = []
+    players = []
     for index, p in enumerate(in_data):
         if in_linprog[index] > 0 and in_linprog[index] < p["bidQuantity"]:
             # Line intersects bar
@@ -40,19 +41,22 @@ def linprog_to_graph(in_data, in_linprog, demand, marketPrice):
             xList.append(in_linprog[index] / 2 + cur_width)
             widthBar.append(in_linprog[index])
             colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 1)')
+            players.append(p["player"].name)
             cur_width += in_linprog[index]
             barHeight.append(p["bidPrice"])
             xList.append(((p["bidQuantity"] - in_linprog[index]) / 2 + cur_width))
             widthBar.append(p["bidQuantity"] - in_linprog[index])
-            colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 0.4)')
+            colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 0.25)')
+            players.append(p["player"].name)
             cur_width += p["bidQuantity"] - in_linprog[index]
         else:
             barHeight.append(p["bidPrice"])
             xList.append(p["bidQuantity"] / 2 + cur_width)
             widthBar.append(p["bidQuantity"])
+            players.append(p["player"].name)
             cur_width += p["bidQuantity"]
             if in_linprog[index] == 0:
-                colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 0.4)')
+                colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 0.25)')
             else:
                 colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 1)')
     return  {
@@ -61,7 +65,8 @@ def linprog_to_graph(in_data, in_linprog, demand, marketPrice):
                 "widthBar": widthBar,
                 "colors": colors,
                 "demand": demand,
-                "marketPrice": marketPrice
+                "marketPrice": marketPrice,
+                "players": players
             }
 
 def login_required(f):
@@ -238,6 +243,21 @@ class GameNamespace(Namespace):
         room = session.get("room")
         leave_room(room)
         print("Game Disconnect")
+    
+    def on_get_stats(self):
+        room = session.get("room")
+        name = session.get("name")
+
+        for player in rooms[room]["dataList"]:
+            if player.name == name:
+                data = {
+                    "asset": assets[player.bids[0].asset][0],
+                    "units": player.bids[0].units,
+                    "generation": assets[player.bids[0].asset][1]
+                }
+                socketio.emit('send_stats', data, namespace='/game', to=player.sid)
+                print(f"Sent Stats {data} to {player.name}")
+                break
 
     def on_submit_bid(self, data):
         room = session.get("room")
@@ -246,7 +266,7 @@ class GameNamespace(Namespace):
             disconnect()
 
         if not rooms[room]["game"]["hasDemand"]:
-            rooms[room]["game"]["curDemand"] = 4# random.randint(100, 120) # randomize the demand
+            rooms[room]["game"]["curDemand"] = 4 # random.randint(100, 120) # randomize the demand
             rooms[room]["game"]["hasDemand"] = True
 
         parsed_data = parse_qs(data.get('data', ''))
@@ -328,11 +348,15 @@ class GameNamespace(Namespace):
                 bounds.append((0, upper_bound))
 
             #define the quantities cleared and market price  USING MAGIC
-            res = linprog(c, A_eq=A_eq, b_eq=b_eq, bounds=bounds)
-            print(f"The marginal returned from LinProg: {res.eqlin['marginals']}")
-            print(f"The vector x returned from LinProg{res.x}\n\n")
-            market_price = res.eqlin["marginals"][0] # What happens if supply dosen't meet demand
-            x = res.x
+            if sum(u) >= demand:
+                res = linprog(c, A_eq=A_eq, b_eq=b_eq, bounds=bounds)
+                print(f"The marginal returned from LinProg: {res.eqlin['marginals']}")
+                print(f"The vector x returned from LinProg{res.x}\n\n")
+                market_price = res.eqlin["marginals"][0] # What happens if supply dosen't meet demand
+                x = res.x
+            else:
+                market_price = max(c)
+                x = u
 
             graphData = linprog_to_graph(sorted_bids, x, demand, market_price)
 
