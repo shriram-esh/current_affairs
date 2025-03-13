@@ -10,9 +10,13 @@
 body {
     font-family: "Work Sans", serif;
     background-color: var(--lobby-background);
-    display: flexbox;
-    justify-content: center;  /* Horizontally centers the content */
-    height: 100vh;  /* Full viewport height */
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers content horizontally */
+    justify-content: center; /* Centers content vertically */
+    height: 100vh;
+    margin: 0;
+    color: var(--player-color);
 }
 
 label{
@@ -25,6 +29,7 @@ label{
 .round{
     justify-content: center;
     font-family: "Work Sans", serif;
+    font-size: 3rem;
     color: var(--subTitle-color);
 
 }
@@ -47,7 +52,7 @@ label{
     cursor: pointer;
     padding: 7px;
     width: 300px;
-    color: var(--hr-color);
+    color: var(--lobby-background);
     background-color: var(--title-color);
     border-radius: 20px;
     border: none;
@@ -57,13 +62,13 @@ label{
     justify-content: center;
     align-items: center;
     gap: 10px;
-    font-size: 2rem;
+    font-size: 1rem;
 }
 
 #playerProfits{
     justify-content: center;
     font-family: "Work Sans", serif;
-    font-size: 3rem;
+    font-size: 1rem;
     color: var(--title-color);
 }
 
@@ -77,10 +82,16 @@ label{
     content: left;
     gap: 40px;
 }
+/* 
+.buttons {
+    display: flex;
+    justify-content: center;
+} */
 
 .buttons {
     display: flex;
     justify-content: center;
+    gap: 10px; /* Adds spacing between buttons */
 }
 
 #leave-btn {
