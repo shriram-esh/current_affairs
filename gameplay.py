@@ -66,6 +66,8 @@ assets = [
     ("Small Modular Reactors", 90, 100),        ("Ocean Thermal Energy Conversion", 200, 20),
     ("Algal Biofuel", 150, 20),                ("Magnetohydrodynamic", 150, 100) 
 ] 
+# Anything with wind and solar should be zero or near zero
+# Coal most expensive. Natural Gas is more expensive then coal
 
 # GLOBAL VARIABLES
 how_many_rounds = 15
@@ -89,7 +91,7 @@ def define_players(usable_assets, players):
     # Players will be data with username
     data_list = [] # this will be in the rooms[room] data structure
 
-    #define all the players
+    # define all the players
     for index, player in enumerate(players):
         data_list.append(Data(player["username"], 1, 0))
         
@@ -105,7 +107,7 @@ def add_asset(usable_assets, player):
 
     asset_num = int(random.randint(0,len(usable_assets)-1))#retruns the index of the usable_assets list. at that index is the index of the asset
 
-    player.bids.append(bid(usable_assets[asset_num],int(random.randint(1,10)),0,0))
+    player.bids.append(bid(usable_assets[asset_num],int(random.randint(100,1000)),0,0)) # Scale by 100x
     usable_assets.pop(asset_num)
 
 
@@ -145,7 +147,6 @@ def print_results(Demand, market_price, data_list):
     print(f"For a demand of: {Demand}")
     print(f"The Market price was: {market_price}")
     print(f"The Demand Charges: {market_price * Demand}\n\n")
-
 
     #print the profits for each player
     for dat in data_list:
