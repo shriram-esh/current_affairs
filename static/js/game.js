@@ -8,11 +8,18 @@ $(document).ready(function() {
     socket.emit('get_stats');
 
     socket.on('send_stats', (data) => {
-        console.log('Received Stats');
-        $('#asset').html(data["asset"]);
-        $('#units').html(data["units"]);
-        $('#generation').html(data["generation"]);
-        $('#round').html(data["currentRound"]);
+        console.log(data);
+        $('#round').html(data[0]["currentRound"]);
+        const assets = data.map(a => {
+            return `
+                <p><b>Asset Type:</b> ${a['asset']}</p>
+                <p><b>Total MegaWatts:</b> ${a['units']}</p>
+                <p><b>Dollars per MegaWatt Hour:</b> ${a['generation']}</p>
+                <br>
+            `
+        });
+        console.log(assets)
+        $('#assets-list').html(assets);
     });
 
     $('#leave-btn').on("click", () => {
