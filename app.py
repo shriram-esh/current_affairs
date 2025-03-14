@@ -15,7 +15,7 @@ from gameplay import *
 load_dotenv()
 
 app = Flask(__name__)
-app.config["SECRET_KEY"] = os.getenv("SECRET_KEY")
+app.config["SECRET_KEY"] = "secret_key"
 socketio = SocketIO(app, cors_allowed_origins='*', manage_session=False)
 
 rooms = {}
@@ -122,7 +122,7 @@ def index():
                                         "hasDemand": False,
                                         "curDemand": 0,
                                         "currentRound": 1,
-                                        "demandRange": (5,15)
+                                        "demandRange": (500,750)
                                     }
                         }
             session["room"] = room
@@ -252,12 +252,14 @@ class GameNamespace(Namespace):
 
         for player in rooms[room]["dataList"]:
             if player.name == name:
-                data = {
-                    "asset": assets[player.bids[0].asset][0],
-                    "units": player.bids[0].units,
-                    "generation": assets[player.bids[0].asset][1],
-                    "currentRound": rooms[room]["game"]["currentRound"]
-                }
+                data = []
+                for bid in player.bids: 
+                    data.append({
+                        "asset": assets[bid.asset][0],
+                        "units": bid.units,
+                        "generation": assets[bid.asset][1],
+                        "currentRound": rooms[room]["game"]["currentRound"]
+                    })
                 socketio.emit('send_stats', data, namespace='/game', to=player.sid)
                 print(f"Sent Stats {data} to {player.name}")
                 break
@@ -383,6 +385,8 @@ class GameNamespace(Namespace):
             if rooms[room]["game"]["currentRound"] % 10 == 1:
                demandRange = rooms[room]["game"]["demandRange"] 
                rooms[room]["game"]["demandRange"] = (demandRange[0] + 1, demandRange[1] + 1)
+               for player in rooms[room]["dataList"]:
+                   add_asset(usable_assets, player)
 
 socketio.on_namespace(LobbyNamespace('/lobby'))
 socketio.on_namespace(GameNamespace('/game'))
