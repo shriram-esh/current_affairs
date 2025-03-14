@@ -40,7 +40,7 @@ $(document).ready(function() {
         $('#bidMsg').empty();
         $('#demandCutOff').html(`<p>Demand Cut Off: ${data["graphData"]["demandCutOff"]}</p>`);
         $('#priceCutOff').html(`<p>Price Cut Off: ${data["graphData"]["priceCutOff"]}</p>`);
-        const profits = data["playerProfits"].map(p => `<li>${p["player"]}: ${p["total"]}</li>`).join("");
+        const profits = data["playerProfits"].map(p => `<li>${p["player"]}: $${p["total"]}</li>`).join("");
         $('#playerProfits').html(profits);
         $('#round').html(data["roundNumber"]);
         updateGraph(data); 
