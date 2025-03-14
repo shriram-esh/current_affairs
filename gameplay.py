@@ -50,10 +50,10 @@ class History:
 
 #ASSETS WE DEFINED FEB 19
 assets = [
-    ("Coal", 140, 2000),                        ("Natural Gas (Combined Cycle)", 120, 1000),
-    ("Natural Gas (Open Cycle)", 150, 500),     ("Nuclear", 90, 600),
-    ("Wind (onshore)", 20, 10),                 ("Wind (Offshore)", 60, 10),
-    ("Soloar Photovoltaic", 30, 500),           ("Concentrated Solar Power", 80, 100),
+    ("Coal", 160, 2000),                        ("Natural Gas (Combined Cycle)", 120, 1000),
+    ("Natural Gas (Open Cycle)", 140, 500),     ("Nuclear", 90, 600),
+    ("Wind (onshore)", 0, 10),                 ("Wind (Offshore)", 0, 10),
+    ("Soloar Photovoltaic", 5, 500),           ("Concentrated Solar Power", 80, 100),
     ("Large-Scale Hydropower", 60, 300),        ("Geothermal", 70, 70),
     ("Biomass (Wood)", 50, 70),                 ("Biomass (Agricultural Waste)",100, 30),
     ("Biogas (Landfills)", 80, 10),             ("Tidal Power", 150, 3),
