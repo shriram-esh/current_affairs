@@ -370,10 +370,10 @@ class GameNamespace(Namespace):
             for index, bid in enumerate(sorted_bids):
                 bid["player"].profit += (market_price - assets[bid["data"].asset][1]) * x[index]
                 player_profits.append({"player": bid["player"].name, "total": bid["player"].profit})
-            print(player_profits)
+            sorted_player_profits = sorted(player_profits, key=lambda x: x["total"], reverse=True)
             data =  {
                         "graphData": graphData,
-                        "playerProfits": player_profits,
+                        "playerProfits": sorted_player_profits,
                         "roundNumber": rooms[room]["game"]["currentRound"] + 1
                     }
             
