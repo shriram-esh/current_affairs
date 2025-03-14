@@ -122,7 +122,7 @@ def index():
                                         "hasDemand": False,
                                         "curDemand": 0,
                                         "currentRound": 1,
-                                        "demandRange": (500,750)
+                                        "demandRange": (1100, 5500) # What do you think  1100 - 11000 units?
                                     }
                         }
             session["room"] = room

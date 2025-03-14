@@ -107,7 +107,7 @@ def add_asset(usable_assets, player):
 
     asset_num = int(random.randint(0,len(usable_assets)-1))#retruns the index of the usable_assets list. at that index is the index of the asset
 
-    player.bids.append(bid(usable_assets[asset_num],int(random.randint(100,1000)),0,0)) # Scale by 100x
+    player.bids.append(bid(usable_assets[asset_num],int(random.randint(500,1000)),0,0)) # Scale by 100x
     usable_assets.pop(asset_num)
 
 
