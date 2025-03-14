@@ -382,11 +382,11 @@ class GameNamespace(Namespace):
                 player.hasBid = False
             rooms[room]["game"]["hasDemand"] = False
             rooms[room]["game"]["currentRound"] += 1
-            if rooms[room]["game"]["currentRound"] % 10 == 1:
-               demandRange = rooms[room]["game"]["demandRange"] 
-               rooms[room]["game"]["demandRange"] = (demandRange[0] + 1, demandRange[1] + 1)
-               for player in rooms[room]["dataList"]:
-                   add_asset(usable_assets, player)
+            # if rooms[room]["game"]["currentRound"] % 10 == 1:
+            #    demandRange = rooms[room]["game"]["demandRange"] 
+            #    rooms[room]["game"]["demandRange"] = (demandRange[0] + 1, demandRange[1] + 1)
+            #    for player in rooms[room]["dataList"]:
+            #        add_asset(usable_assets, player)
 
 socketio.on_namespace(LobbyNamespace('/lobby'))
 socketio.on_namespace(GameNamespace('/game'))

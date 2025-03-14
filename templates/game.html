@@ -3,33 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/html5reset.css">
+    <link rel="stylesheet" href="/static/css/game.css">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
     <script type="module" src="{{ url_for('static', filename='js/game.js') }}"></script>  
     <title>Game Screen</title>
 </head>
 <body>
-    <h1>Round <span id="round"></span></h1>
-    <div id="assets-list"></div>
-
-    <form method="POST" id="bid-form">
-        <label for="bid">Quantity:</label><br>
-        <input type="text" id="quantity" name="quantity"><br>
-        <label for="bid">Price:</label><br>
-        <input type="text" id="price" name="price"><br>
-        <input type="submit" name="bid-submit" value="Submit Bid">
-    </form>
-    <div id="bidMsg">
+    <div class="gameplay-container">
+        <div class="player-action-container">
+            <div class="player-stats-container">
+                <h1>Round <span id="round">2</span></h1>
+                <div id="assets-list">
+                    <p><b>Asset Type:</b> Coal</p>
+                    <p><b>Total MegaWatts:</b> 974</p>
+                    <p><b>Dollars per MegaWatt Hour:</b> 300</p>
+                    <br>
+                </div>
+            </div>
+            <div class="form-container">
+                <form method="POST" id="bid-form">
+                    <label for="bid">Quantity:</label>
+                    <input type="text" id="quantity" name="quantity">
+                    <label for="bid">Price:</label>
+                    <input type="text" id="price" name="price">
+                    <input type="submit" id="submit" name="bid-submit" value="Submit Bid">
+                </form>
+                <div id="bidMsg">
+                </div>
+            </div>
+        </div>
+        <div class="profit-container">
+            <h1>Player Profits</h1>
+            <ol id="playerProfits">
+                {% for player in ctx.players %}
+                    <li>{{ player["username"] }}</li>
+                {% endfor %}
+            </ol>
+        </div>
     </div>
-    <ul id="player-list">
+    <!-- <ul id="player-list">
+        <li>Tommie</li>
+        <li>Shriramu</li>
         {% for player in ctx.players %}
             <li>{{ player["username"] }}</li>
         {% else %}
             <li>No players in the room.</li>
         {% endfor %}
-    </ul>
-    <ul id="playerProfits"></ul>
-    <div class="bidGraph" style="width:1000px;height:600px;"></div>
+    </ul> -->
+    <div class="bidGraph"></div>
     <button id="leave-btn">Leave</button>
 </body>
 </html>
