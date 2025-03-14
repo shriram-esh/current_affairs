@@ -149,4 +149,5 @@ $(document).ready(function() {
         
         Plotly.newPlot(graph, data, layout, config);
     } 
+    
 });
