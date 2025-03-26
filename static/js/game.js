@@ -62,6 +62,7 @@ $(document).ready(function() {
         const colors = in_data["colors"]
         const players = in_data["players"]
         const roundNumber = data["roundNumber"]
+        console.log(0, Math.max(...barHeight))
     
         var data = [
             {
@@ -81,13 +82,20 @@ $(document).ready(function() {
             title: {
                 text: `Electricity Market Round ${roundNumber - 1}`
             },
+            yaxis: {
+                type: 'log',
+                range: [Math.log10(1), Math.log10(100000)],
+                tickmode: 'array',
+                tickvals: [1, 10, 100, 1000, 10000], // The values at which to show ticks
+                ticktext: ['1', '10', '100', '1000', '10000'], // Custom labels for the ticks
+            },
             dragmode: false,
             shapes: [
                 // Horizontal line (Market Price)
                 {
                     type: "line",
                     x0: 0,  // Start at the min X value
-                    x1: Math.max(widthBar.reduce((acc, cur) => acc + cur, 0) * 1.2, demand),  // End at the max X value
+                    x1: Math.max(widthBar.reduce((acc, cur) => acc + cur, 0), demand),  // End at the max X value
                     y0: marketPrice,
                     y1: marketPrice,
                     line: {
@@ -101,8 +109,8 @@ $(document).ready(function() {
                     type: "line",
                     x0: demand,
                     x1: demand,
-                    y0: 0,  // Start at the min Y value
-                    y1: Math.max(...barHeight) * 1.2,  // Extend a bit beyond max Y
+                    y0: 0,  // Start at the minimum y value (log(1) = 0)
+                    y1: 100000,  // Extend beyond max y value in log scale
                     line: {
                         color: "black",
                         width: 3,
@@ -112,12 +120,15 @@ $(document).ready(function() {
             ],
             annotations: [
                 {
-                    x: Math.max(widthBar.reduce((acc, cur) => acc + cur, 0) * 1.2, demand),  
-                    y: marketPrice,
+                    x: Math.max(widthBar.reduce((acc, cur) => acc + cur, 0), demand),  
+                    y: Math.log10(marketPrice),
                     xanchor: "left",
                     yanchor: "middle",
                     text: `Market Price: ${marketPrice}`,
-                    showarrow: false,
+                    showarrow: true,
+                    arrowcolor: "red",
+                    ax: 20,  // Move the arrowhead to the right
+                    ay: 0,  // Keep the arrow aligned horizontally
                     font: {
                         color: "red",
                         size: 14
@@ -126,11 +137,14 @@ $(document).ready(function() {
                 // Demand Label
                 {
                     x: demand,
-                    y: Math.max(...barHeight) * 1.2,  
-                    xanchor: "center",
+                    y: Math.log10(10000),  
+                    xanchor: "right",
                     yanchor: "bottom",
                     text: `Demand: ${demand}`,
-                    showarrow: false,
+                    showarrow: true,
+                    arrowcolor: "black",
+                    ax: -20,  // Move the arrowhead to the right
+                    ay: -10,  // Keep the arrow aligned horizontally
                     font: {
                         color: "black",
                         size: 14
@@ -148,6 +162,5 @@ $(document).ready(function() {
         };
         
         Plotly.newPlot(graph, data, layout, config);
-    } 
-    
+    }   
 });
