@@ -119,10 +119,7 @@ def index():
                             "dataList": [], 
                             "game": {
                                         "started": False,
-                                        "hasDemand": False,
-                                        "curDemand": 0,
-                                        "currentRound": 1,
-                                        "demandRange": (2200, 11000) # What do you think  1100 - 11000 units?
+                                        "currentRound": 1
                                     }
                         }
             session["room"] = room
@@ -270,10 +267,10 @@ class GameNamespace(Namespace):
         if room not in rooms:
             disconnect()
 
-        if not rooms[room]["game"]["hasDemand"]:
-            demandRange = rooms[room]["game"]["demandRange"]
-            rooms[room]["game"]["curDemand"] = random.randint(demandRange[0], demandRange[1]) # randomize the demand
-            rooms[room]["game"]["hasDemand"] = True
+        # if not rooms[room]["game"]["hasDemand"]:
+        #     demandRange = rooms[room]["game"]["demandRange"]
+        #     rooms[room]["game"]["curDemand"] = random.randint(demandRange[0], demandRange[1]) # randomize the demand
+        #     rooms[room]["game"]["hasDemand"] = True
 
         parsed_data = parse_qs(data.get('data', ''))
         parsed_data_clean = {}
@@ -330,9 +327,11 @@ class GameNamespace(Namespace):
         if all(player.hasBid for player in rooms[room]["dataList"]):
 
             all_bids = []
+            marketUnits = 0
             for player in rooms[room]["dataList"]:
                 for bid in player.bids:
                     all_bids.append({"player": player, "data": bid, "bidPrice": bid.price, "bidQuantity": bid.quantity, "color": player.color})
+                    marketUnits += bid.quantity
             sorted_bids = sorted(all_bids, key=lambda x: x["bidPrice"])
 
             prices = []
@@ -341,7 +340,8 @@ class GameNamespace(Namespace):
                 print(bid)
                 prices.append(bid["data"].price)
                 quantities.append(bid["data"].quantity)
-            demand = rooms[room]["game"]["curDemand"]
+            print(f"Total Bid Quantity: {marketUnits}")
+            demand = random.randint(round((marketUnits * (2/3)) * 0.9), round((marketUnits * (2/3)) * 1.1))
 
             c = prices #prices
             u = quantities #quantities of each good
@@ -380,7 +380,7 @@ class GameNamespace(Namespace):
             socketio.emit('round_over', data, namespace='/game', to=room)
             for player in rooms[room]["dataList"]:
                 player.hasBid = False
-            rooms[room]["game"]["hasDemand"] = False
+            # rooms[room]["game"]["hasDemand"] = False
             rooms[room]["game"]["currentRound"] += 1
             # if rooms[room]["game"]["currentRound"] % 10 == 1:
             #    demandRange = rooms[room]["game"]["demandRange"] 

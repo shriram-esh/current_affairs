@@ -90,7 +90,6 @@ usable_assets = list(range(len(assets)))
 def define_players(usable_assets, players):
     # Players will be data with username
     data_list = [] # this will be in the rooms[room] data structure
-
     # define all the players
     for index, player in enumerate(players):
         data_list.append(Data(player["username"], 1, 0))
@@ -107,7 +106,7 @@ def add_asset(usable_assets, player):
 
     asset_num = int(random.randint(0,len(usable_assets)-1))#retruns the index of the usable_assets list. at that index is the index of the asset
 
-    player.bids.append(bid(usable_assets[asset_num],int(random.randint(500,1000)),0,0)) # Scale by 100x
+    player.bids.append(bid(usable_assets[asset_num], int(random.randint(500,1000)), 0, 0)) # Scale by 100x
     usable_assets.pop(asset_num)
 
 
