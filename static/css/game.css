@@ -143,3 +143,11 @@ input[type="text"] {
     flex-direction: column;
     gap: 20px;
 }
+
+.bid-ready {
+    color: green;
+}
+
+.bid-unready {
+    color: red;
+}

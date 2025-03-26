@@ -40,7 +40,7 @@ $(document).ready(function() {
         $('#bidMsg').empty();
         $('#demandCutOff').html(`<p>Demand Cut Off: ${data["graphData"]["demandCutOff"]}</p>`);
         $('#priceCutOff').html(`<p>Price Cut Off: ${data["graphData"]["priceCutOff"]}</p>`);
-        const profits = data["playerProfits"].map(p => `<li>${p["player"]}: $${p["total"]}</li>`).join("");
+        const profits = data["playerProfits"].map(p => `<li id="${p["player"]}" class="bid-unready">${p["player"]}: $${p["total"].toLocaleString()}</li>`).join("");
         $('#playerProfits').html(profits);
         $('#round').html(data["roundNumber"]);
         updateGraph(data); 
@@ -48,6 +48,14 @@ $(document).ready(function() {
 
     socket.on('bid_status', (data) => {
         $('#bidMsg').html(`<p>${data.message}</p>`);
+    });
+
+    socket.on('all_bids_status', (data) => {
+        console.log(`${data["name"]} is ready`);
+        const player = $(`#${data["name"]}`);
+        if (player.hasClass("bid-unready")) {
+            player.removeClass("bid-unready").addClass("bid-ready");
+        }
     });
 
     function updateGraph(data) {

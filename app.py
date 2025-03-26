@@ -311,15 +311,19 @@ class GameNamespace(Namespace):
             if (parsed_data_clean["price"] < 0 or parsed_data_clean["price"] > market_cap):
                 socketio.emit('bid_status', {'message': 'Enter a different price (ensure it is non-negative number below the market cap)'}, namespace='/game', to=player.sid)
                 return
-
-            if (parsed_data_clean["quantity"] < 0 or parsed_data_clean["quantity"] > player.bids[0].units):
-                socketio.emit('bid_status', {'message': f'Enter a different quantity (ensure it is non-negative number below the number of units you have ({player.bids[0].units})'}, namespace='/game', to=player.sid)
-                return
+            if(parsed_data_clean["quantity"] != 'd'):
+                if (parsed_data_clean["quantity"] < 0 or parsed_data_clean["quantity"] > player.bids[0].units):
+                    socketio.emit('bid_status', {'message': f'Enter a different quantity (ensure it is non-negative number below the number of units you have ({player.bids[0].units})'}, namespace='/game', to=player.sid)
+                    return
             player.bids[0].price = float(parsed_data_clean["price"])
-            player.bids[0].quantity = float(parsed_data_clean["quantity"])
+            if (parsed_data_clean["quantity"] == 'd'):
+                player.bids[0].quantity = player.bids[0].units
+            else:
+                player.bids[0].quantity = float(parsed_data_clean["quantity"])
             player.hasBid = True
             
             socketio.emit('bid_status', {'message': 'Bid successful!'}, namespace='/game', to=player.sid)
+            socketio.emit('all_bids_status', {'name': player.name}, namespace='/game', to=room)
  
         print(f"{name} submit data: {parsed_data_clean}")
 
