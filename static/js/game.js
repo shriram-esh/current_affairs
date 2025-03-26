@@ -140,7 +140,7 @@ $(document).ready(function() {
                     font: {
                         color: "red",
                         size: 14
-                    }
+                    } // This is important
                 },
                 // Demand Label
                 {
