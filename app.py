@@ -115,6 +115,7 @@ def index():
         if action == "Create Room":
             room = generate_code()
             rooms[room]={
+                            "admin": username,
                             "players": [],
                             "dataList": [], 
                             "game": {
@@ -156,7 +157,7 @@ def lobby():
         if action == 'leave': 
             return redirect(url_for('logout'))
     
-    context={ "room": room }
+    context={ "room": room, "is_admin": name == rooms[room]["admin"], "admin": rooms[room]["admin"] }
     return render_template('lobby.html', ctx=context)
 
 @app.route('/game', methods=['GET', 'POST'])
@@ -177,11 +178,12 @@ class LobbyNamespace(Namespace):
             print(f"User {name} joined room {room}")
             print(rooms[room])
             join_room(room)
-            rooms[room]["players"].append(  
-                                            {
-                                                "username": name,
-                                            }
-                                        )
+            if rooms[room]["admin"] != name:
+                rooms[room]["players"].append(  
+                                                {
+                                                    "username": name,
+                                                }
+                                            )
             socketio.emit("user_change", rooms[room], namespace='/lobby', to=room)
         else:
             socketio.emit("player_left", {'msg': "gone"}, namespace='/lobby', to=request.sid)
@@ -192,22 +194,25 @@ class LobbyNamespace(Namespace):
 
         print(f"User {name} left room {room}")
         leave_room(room)
+
+        if room not in rooms:
+            return
         
         if rooms[room]["game"]["started"]:
             return
-
-        if room in rooms:
-            for player in rooms[room]["players"]:
-                if player["username"] == name:
-                    rooms[room]["players"].remove(player)
-                    break
         
-        if len(rooms[room]["players"]) == 0:
+        if rooms[room]["admin"] == name:
             print(f"Delete room {room}")
+            socketio.emit("player_left", {'msg': "gone"}, namespace='/lobby', to=room)
             del rooms[room]
+            return
 
-        if room in rooms and rooms[room]["players"]:
-            socketio.emit("user_change", rooms[room], namespace='/lobby', to=room)
+        for player in rooms[room]["players"]:
+            if player["username"] == name:
+                rooms[room]["players"].remove(player)
+                break
+
+        socketio.emit("user_change", rooms[room], namespace='/lobby', to=room)
 
     def on_start_game(self, data):
         room = session.get("room")

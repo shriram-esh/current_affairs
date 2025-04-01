@@ -13,8 +13,8 @@ $(document).ready(function() {
         const assets = data.map(a => {
             return `
                 <p><b>Asset Type:</b> ${a['asset']}</p>
-                <p><b>Total MegaWatts:</b> ${a['units']}</p>
-                <p><b>Dollars per MegaWatt Hour:</b> ${a['generation']}</p>
+                <p><b>Generation Capacity:</b> ${a['units']} MW</p>
+                <p><b>Generation Cost:</b> $${a['generation']} / MWh</p>
                 <br>
             `
         });
