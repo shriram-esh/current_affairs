@@ -24,17 +24,17 @@ For deployment, we use the cloud service Heroku and the Heroku CLI.
     
     - **Ubuntu/Debian**: `curl https://cli-assets.heroku.com/install-ubuntu.sh | sh`
 
-To verify your CLI installation, use the `heroku --version` command.
+4. Use the `heroku --version` command to verify your Heroku CLI installation.
 
 ### Push Code to Heroku Server
 
 4. Using the Heroku CLI, log into your Heroku account using the `heroku login` command. This will open a browser window to authenticate your Heroku account.
 
-5. Run `heroku create <your-app-name>` replace <your-app-name> with a unique name.
+5. Run `heroku create <your-app-name>` replace \<your-app-name\> with a unique name.
 
 6. Heroku needs a Procfile to know how to run the application. A default one has already been created in the repository. If you want to customize your application further, you can edit the Procfile.
 
-7. Run `git push heroku <branch>` replace <branch> with the name of the git branch you would like to use. This will push your code to the Heroku server. **This may take a couple of minutes.**
+7. Run `git push heroku <branch>` replace \<branch\> with the name of the git branch you would like to use. This will push your code to the Heroku server. **This may take a couple of minutes.**
 
 ### Start Server
 
