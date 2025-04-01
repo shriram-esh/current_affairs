@@ -22,7 +22,6 @@ textarea {
 
 
 .lobby-header {
-    height: 100px;
     background-color: var(--lobby-header);
     display: flex;
     flex-direction: column;
@@ -30,22 +29,19 @@ textarea {
     align-items: center;
     gap: 20px;
     font-size: 2rem;
+    padding: 20px 0px;
 }
 
 .lobby-title {
     color: var(--title-color);
 }
 
-.room-code {
+.sub-color {
     color: var(--subTitle-color);
 }
 
 .players-title {
     color: var(--title-color);
-}
-
-#player-total {
-    color: var(--subTitle-color);
 }
 
 #player-list {
