@@ -18,11 +18,9 @@ For deployment, we use the cloud service Heroku and the Heroku CLI.
 
 3. Install the Heroku CLI depending on your OS.
 
-**macOS**: `brew install heroku/brew/heroku`
-
-**Windows**: Go to the Heroku [CLI download page](https://devcenter.heroku.com/articles/heroku-cli#install-the-heroku-cli) and download the Windows installer. Run the installer and follow the instructions to install it.
-
-**Ubuntu/Debian**: `curl https://cli-assets.heroku.com/install-ubuntu.sh | sh`
+  - **macOS**: `brew install heroku/brew/heroku`
+  - **Windows**: Go to the Heroku [CLI download page](https://devcenter.heroku.com/articles/heroku-cli#install-the-heroku-cli) and download the Windows installer. Run the installer and follow the instructions to install it.
+  - **Ubuntu/Debian**: `curl https://cli-assets.heroku.com/install-ubuntu.sh | sh`
 
 To verify your CLI installation, use the `heroku --version` command.
 
