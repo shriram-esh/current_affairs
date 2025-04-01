@@ -32,7 +32,7 @@ For deployment, we use the cloud service Heroku and the Heroku CLI.
 
 5. Run `heroku create <your-app-name>` replace \<your-app-name\> with a unique name.
 
-6. Heroku needs a Procfile to know how to run the application. A default one has already been created in the repository. If you want to customize your application further, you can edit the Procfile.
+6. **(Optional)** Heroku needs a Procfile to know how to run the application. A default one has already been created in the repository. If you want to customize your application further, you can edit the Procfile.
 
 7. Run `git push heroku <branch>` replace \<branch\> with the name of the git branch you would like to use. This will push your code to the Heroku server. **This may take a couple of minutes.**
 
