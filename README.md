@@ -10,7 +10,7 @@ Tools go here.
 
 For deployment, we use the cloud service Heroku and the Heroku CLI.
 
-# Setup
+### Setup
 
 1. Create a new directory and clone the repository: `git clone git@github.com:tpayne52/current_affairs.git`
 
@@ -26,7 +26,7 @@ For deployment, we use the cloud service Heroku and the Heroku CLI.
 
 To verify your CLI installation, use the `heroku --version` command.
 
-# Push Code to Heroku Server
+### Push Code to Heroku Server
 
 4. Using the Heroku CLI, log into your Heroku account using the `heroku login` command. This will open a browser window to authenticate your Heroku account.
 
@@ -36,13 +36,13 @@ To verify your CLI installation, use the `heroku --version` command.
 
 7. Run `git push heroku <branch>` replace <branch> with the name of the git branch you would like to use. This will push your code to the Heroku server. **This may take a couple of minutes.**
 
-# Start Server
+### Start Server
 
 8. Run `heroku ps:scale web=1` this will create one instance of your web process. Using one is more than sufficient for one classroom.
 
 9. Run `heroku open` this will launch the app in the browser.
 
-# Shutdown Server
+### Shutdown Server
 
 10. Once you are finished using the server, run `heroku ps:scale web=0` this will prevent further charges while not in use.
 
