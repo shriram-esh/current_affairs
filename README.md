@@ -28,23 +28,23 @@ For deployment, we use the cloud service Heroku and the Heroku CLI.
 
 ### Push Code to Heroku Server
 
-4. Using the Heroku CLI, log into your Heroku account using the `heroku login` command. This will open a browser window to authenticate your Heroku account.
+5. Using the Heroku CLI, log into your Heroku account using the `heroku login` command. This will open a browser window to authenticate your Heroku account.
 
-5. Run `heroku create <your-app-name>` replace \<your-app-name\> with a unique name.
+6. Run `heroku create <your-app-name>` replace \<your-app-name\> with any name you want for the application.
 
-6. **(Optional)** Heroku needs a Procfile to know how to run the application. A default one has already been created in the repository. If you want to customize your application further, you can edit the Procfile.
+7. **(Optional)** Heroku needs a Procfile to know how to run the application. A default one has already been created in the repository. If you want to customize your application further, you can edit the Procfile.
 
-7. Run `git push heroku <branch>` replace \<branch\> with the name of the git branch you would like to use. This will push your code to the Heroku server. **This may take a couple of minutes.**
+8. Run `git push heroku main` this will push your code to the Heroku server. **This may take a couple of minutes.**
 
 ### Start Server
 
-8. Run `heroku ps:scale web=1` this will create one instance of your web process. Using one is more than sufficient for one classroom.
+9. Run `heroku ps:scale web=1` this will create one instance of your web process. Using one is more than sufficient for one classroom.
 
-9. Run `heroku open` this will launch the app in the browser.
+10. Run `heroku open` this will launch the app in the browser.
 
 ### Shutdown Server
 
-10. Once you are finished using the server, run `heroku ps:scale web=0` this will prevent further charges while not in use.
+11. Once you are finished using the server, run `heroku ps:scale web=0` this will prevent further charges while not in use.
 
 ### Summary
 At this point, you should be able to:
