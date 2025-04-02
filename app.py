@@ -115,7 +115,7 @@ def index():
         if action == "Create Room":
             room = generate_code()
             rooms[room]={
-                            "admin": username,
+                            "admin": {"username": username, "sid": ""},
                             "players": [],
                             "dataList": [], 
                             "game": {
@@ -157,7 +157,8 @@ def lobby():
         if action == 'leave': 
             return redirect(url_for('logout'))
     
-    context={ "room": room, "is_admin": name == rooms[room]["admin"], "admin": rooms[room]["admin"] }
+    context={ "room": room, "is_admin": name == rooms[room]["admin"]["username"], "admin": rooms[room]["admin"]["username"] }
+    print(context)
     return render_template('lobby.html', ctx=context)
 
 @app.route('/game', methods=['GET', 'POST'])
@@ -167,7 +168,8 @@ def game():
     name = session.get("name")
     if room is None or name is None or room not in rooms:
         return redirect(url_for("index"))
-    return render_template('game.html', ctx=rooms[room])
+    context={ "room": rooms[room], "is_admin": name == rooms[room]["admin"]["username"] }
+    return render_template('game.html', ctx=context)
 
 class LobbyNamespace(Namespace):
     def on_connect(self):
@@ -178,7 +180,7 @@ class LobbyNamespace(Namespace):
             print(f"User {name} joined room {room}")
             print(rooms[room])
             join_room(room)
-            if rooms[room]["admin"] != name:
+            if rooms[room]["admin"]["username"] != name:
                 rooms[room]["players"].append(  
                                                 {
                                                     "username": name,
@@ -201,7 +203,7 @@ class LobbyNamespace(Namespace):
         if rooms[room]["game"]["started"]:
             return
         
-        if rooms[room]["admin"] == name:
+        if rooms[room]["admin"]["username"] == name:
             print(f"Delete room {room}")
             socketio.emit("player_left", {'msg': "gone"}, namespace='/lobby', to=room)
             del rooms[room]
@@ -234,12 +236,16 @@ class GameNamespace(Namespace):
 
         print(f"User: {name} Room: {room} SID: {sid}")
 
+        if name == rooms[room]["admin"]["username"]:
+            rooms[room]["admin"]["sid"] = sid
+            return
+
         if room in rooms:
             for player in rooms[room]["dataList"]:
                 if player.name == name:
                     player.sid = sid
                     print(f"User {name} SID updated: {sid}")
-                    break
+                    return
         else:
             disconnect()
 
@@ -272,14 +278,8 @@ class GameNamespace(Namespace):
         if room not in rooms:
             disconnect()
 
-        # if not rooms[room]["game"]["hasDemand"]:
-        #     demandRange = rooms[room]["game"]["demandRange"]
-        #     rooms[room]["game"]["curDemand"] = random.randint(demandRange[0], demandRange[1]) # randomize the demand
-        #     rooms[room]["game"]["hasDemand"] = True
-
         parsed_data = parse_qs(data.get('data', ''))
         parsed_data_clean = {}
-        print(parsed_data)
 
         for key, values in parsed_data.items():
             try:
@@ -316,7 +316,7 @@ class GameNamespace(Namespace):
             if (parsed_data_clean["price"] < 0 or parsed_data_clean["price"] > market_cap):
                 socketio.emit('bid_status', {'message': 'Enter a different price (ensure it is non-negative number below the market cap)'}, namespace='/game', to=player.sid)
                 return
-            if(parsed_data_clean["quantity"] != 'd'):
+            if (parsed_data_clean["quantity"] != 'd'):
                 if (parsed_data_clean["quantity"] < 0 or parsed_data_clean["quantity"] > player.bids[0].units):
                     socketio.emit('bid_status', {'message': f'Enter a different quantity (ensure it is non-negative number below the number of units you have ({player.bids[0].units})'}, namespace='/game', to=player.sid)
                     return
@@ -328,19 +328,52 @@ class GameNamespace(Namespace):
             player.hasBid = True
             
             socketio.emit('bid_status', {'message': 'Bid successful!'}, namespace='/game', to=player.sid)
-            socketio.emit('all_bids_status', {'name': player.name}, namespace='/game', to=room)
+
+            marketUnits = 0
+            allBid = all(player.hasBid for player in rooms[room]["dataList"])
+            if allBid:
+                for player in rooms[room]["dataList"]:
+                    for bid in player.bids:
+                        marketUnits += bid.quantity
+
+            data = {
+                "allBid": allBid,
+                "name": player.name,
+                "marketUnits": marketUnits
+            }
+
+            socketio.emit('all_bids_status', data, namespace='/game', to=room)
  
         print(f"{name} submit data: {parsed_data_clean}")
 
+    def on_run_round(self, data):
+        room = session.get("room")
+        name = session.get("name")
+
+        if name != rooms[room]["admin"]["username"]:
+            return
+
         # Check if everyone has voted
         if all(player.hasBid for player in rooms[room]["dataList"]):
+            parsed_data = parse_qs(data.get('data', ''))
+            parsed_data_clean = {}
+
+            for key, values in parsed_data.items():
+                try:
+                    # Try converting the value to an int
+                    parsed_data_clean[key] = int(values[0])
+                except ValueError:
+                    try:
+                        # If that fails, try converting the value to a float
+                        parsed_data_clean[key] = float(values[0])
+                    except ValueError:
+                        # If both conversions fail, keep it as original type
+                        parsed_data_clean[key] = values[0]
 
             all_bids = []
-            marketUnits = 0
             for player in rooms[room]["dataList"]:
                 for bid in player.bids:
                     all_bids.append({"player": player, "data": bid, "bidPrice": bid.price, "bidQuantity": bid.quantity, "color": player.color})
-                    marketUnits += bid.quantity
             sorted_bids = sorted(all_bids, key=lambda x: x["bidPrice"])
 
             prices = []
@@ -349,8 +382,8 @@ class GameNamespace(Namespace):
                 print(bid)
                 prices.append(bid["data"].price)
                 quantities.append(bid["data"].quantity)
-            print(f"Total Bid Quantity: {marketUnits}")
-            demand = random.randint(round((marketUnits * (2/3)) * 0.9), round((marketUnits * (2/3)) * 1.1))
+            demand = parsed_data_clean["slider"]
+            print(f"This is the demand: {demand}")
 
             c = prices #prices
             u = quantities #quantities of each good
@@ -389,13 +422,10 @@ class GameNamespace(Namespace):
             socketio.emit('round_over', data, namespace='/game', to=room)
             for player in rooms[room]["dataList"]:
                 player.hasBid = False
-            # rooms[room]["game"]["hasDemand"] = False
+
             rooms[room]["game"]["currentRound"] += 1
-            # if rooms[room]["game"]["currentRound"] % 10 == 1:
-            #    demandRange = rooms[room]["game"]["demandRange"] 
-            #    rooms[room]["game"]["demandRange"] = (demandRange[0] + 1, demandRange[1] + 1)
-            #    for player in rooms[room]["dataList"]:
-            #        add_asset(usable_assets, player)
+        else:
+            socketio.emit('bid_status', {'message': f'Not everyone has voted!'}, namespace='/game', to=rooms[room]["admin"]["sid"])
 
 socketio.on_namespace(LobbyNamespace('/lobby'))
 socketio.on_namespace(GameNamespace('/game'))

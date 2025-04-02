@@ -15,47 +15,46 @@
 </head>
 <body>
     <div class="gameplay-container">
-        <div class="player-action-container">
-            <div class="player-stats-container">
-                <h1>Round <span id="round">2</span></h1>
-                <div id="assets-list">
-                    <p><b>Asset Type:</b>Coal</p>
-                    <p><b>Generation Capacity:</b>974</p>
-                    <p><b>Generation Cost:</b>300</p>
-                    <br>
+        {% if not ctx["is_admin"] %}
+            <div class="player-action-container">
+                <div class="player-stats-container">
+                    <h1>Round <span id="round"></span></h1>
+                    <div id="assets-list"></div>
+                </div>
+                <div class="form-container">
+                    <form method="POST" id="bid-form">
+                        <label for="bid">Quantity:</label>
+                        <label>(type 'd' for all units)</label>
+                        <input type="text" id="quantity" name="quantity">
+                        <label for="bid">Price:</label>
+                        <input type="text" id="price" name="price">
+                        <input type="submit" id="submit" name="bid-submit" value="Submit Bid">
+                    </form>
+                    <div id="errMsg">
+                    </div>
                 </div>
             </div>
-            <div class="form-container">
-                <form method="POST" id="bid-form">
-                    <label for="bid">Quantity:</label>
-                    <label>(type 'd' for all units)</label>
-                    <input type="text" id="quantity" name="quantity">
-                    <label for="bid">Price:</label>
-                    <input type="text" id="price" name="price">
-                    <input type="submit" id="submit" name="bid-submit" value="Submit Bid">
-                </form>
-                <div id="bidMsg">
+        {% else %}
+            <div class="player-action-container">
+                <div class="player-stats-container">
+                    <h1>Round <span id="round"></span></h1>
+                </div>
+                <div class="form-container">
+                    <div id="form-submit"><h1>Waiting for all bids...</h1></div>
+                    <div id="errMsg">
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endif %}
         <div class="profit-container">
             <h1>Player Profits</h1>
             <ol id="playerProfits">
-                {% for player in ctx.players %}
+                {% for player in ctx["players"] %}
                     <li id="{{ player['username'] }}" class="bid-unready">{{ player["username"] }}</li>
                 {% endfor %}
             </ol>
         </div>
     </div>
-    <!-- <ul id="player-list">
-        <li>Tommie</li>
-        <li>Shriramu</li>
-        {% for player in ctx.players %}
-            <li>{{ player["username"] }}</li>
-        {% else %}
-            <li>No players in the room.</li>
-        {% endfor %}
-    </ul> -->
     <div class="bidGraph"></div>
     <button id="leave-btn">Leave</button>
 </body>
