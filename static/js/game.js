@@ -8,7 +8,6 @@ $(document).ready(function() {
     socket.emit('get_stats');
 
     socket.on('send_stats', (data) => {
-        console.log(data);
         $('#round').html(data[0]["currentRound"]);
         const assets = data.map(a => {
             return `
@@ -18,7 +17,6 @@ $(document).ready(function() {
                 <br>
             `
         });
-        console.log(assets)
         $('#assets-list').html(assets);
     });
 
@@ -34,34 +32,70 @@ $(document).ready(function() {
     });
 
     socket.on('round_over', (data) => {
-        // console.log(`Round Over! Data: ${data.graphData}`)
-        // console.log(`Player Bids: ${data.playerProfits}`)
-        console.log(data)
-        $('#bidMsg').empty();
-        $('#demandCutOff').html(`<p>Demand Cut Off: ${data["graphData"]["demandCutOff"]}</p>`);
-        $('#priceCutOff').html(`<p>Price Cut Off: ${data["graphData"]["priceCutOff"]}</p>`);
+        $('#errMsg').empty();
+        // $('#demandCutOff').html(`<p>Demand Cut Off: ${data["graphData"]["demandCutOff"]}</p>`);
+        // $('#priceCutOff').html(`<p>Price Cut Off: ${data["graphData"]["priceCutOff"]}</p>`);
         const profits = data["playerProfits"].map(p => `<li id="${p["player"]}" class="bid-unready">${p["player"]}: $${p["total"].toLocaleString()}</li>`).join("");
         $('#playerProfits').html(profits);
         $('#round').html(data["roundNumber"]);
+        $('#form-submit').html("<h1>Waiting for all bids...</h1>");
         updateGraph(data); 
     });
 
     socket.on('bid_status', (data) => {
-        $('#bidMsg').html(`<p>${data.message}</p>`);
+        $('#errMsg').html(`<p>${data.message}</p>`);
     });
 
     socket.on('all_bids_status', (data) => {
-        console.log(`${data["name"]} is ready`);
         const player = $(`#${data["name"]}`);
         if (player.hasClass("bid-unready")) {
             player.removeClass("bid-unready").addClass("bid-ready");
         }
+
+        if (data["allBid"]) { 
+            const form = `
+                <form method="POST" id="round-form">
+                    <label for="slider">Slider:</label>
+                    <input type="range" id="slider" name="slider" min="0" max="${data["marketUnits"]}" value="${Math.trunc(data["marketUnits"] / 2)}">
+                    <label for="demand">Demand:</label>
+                    <input type="number" id="demand" name="demand" min="0" max="${data["marketUnits"]}" value="${Math.trunc(data["marketUnits"] / 2)}">
+                    <input type="submit" id="submit" name="round-submit" value="Run Round">
+                </form>
+            `;
+            $('#form-submit').html(form);
+        }
+    });
+
+    // Admin Functionality
+
+    // Run Round
+
+    $(document).on('submit', '#round-form', (e) => {
+        e.preventDefault();
+        const formData = $('#round-form').serialize();
+        console.log("Submit");
+        console.log(formData);
+        socket.emit('run_round', { data: formData });
+    });
+
+    $(document).on("input", "#slider", function () {
+        $("#demand").val($(this).val());
+    });
+    
+    $(document).on("input", "#demand", function () {
+        let value = parseInt($(this).val(), 10);
+        let min = parseInt($(this).attr("min"), 10);
+        let max = parseInt($(this).attr("max"), 10);
+
+        if (value < min) $(this).val(min);
+        if (value > max) $(this).val(max);
+        
+        $("#slider").val($(this).val()); // Keep slider in sync
     });
 
     function updateGraph(data) {
         const in_data = data["graphData"]
         const graph = document.querySelector('.bidGraph');
-        console.log(in_data["demand"])
         const demand = in_data["demand"]
         const marketPrice = in_data["marketPrice"]
         const xList = in_data["xList"] // Center of Bar (to[0] - from[0] / 2)
@@ -70,7 +104,6 @@ $(document).ready(function() {
         const colors = in_data["colors"]
         const players = in_data["players"]
         const roundNumber = data["roundNumber"]
-        console.log(0, Math.max(...barHeight))
     
         var data = [
             {
