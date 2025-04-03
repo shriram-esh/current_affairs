@@ -50,24 +50,24 @@ class History:
 
 #ASSETS WE DEFINED FEB 19
 assets = [
-    ("Coal", 160, 2000),                        ("Natural Gas (Combined Cycle)", 120, 1000),
-    ("Natural Gas (Open Cycle)", 140, 500),     ("Nuclear", 90, 600),
-    ("Wind (onshore)", 0, 10),                 ("Wind (Offshore)", 0, 10),
-    ("Soloar Photovoltaic", 5, 500),           ("Concentrated Solar Power", 80, 100),
-    ("Large-Scale Hydropower", 60, 300),        ("Geothermal", 70, 70),
-    ("Biomass (Wood)", 50, 70),                 ("Biomass (Agricultural Waste)",100, 30),
-    ("Biogas (Landfills)", 80, 10),             ("Tidal Power", 150, 3),
-    ("Wave Power", 100, 4),                     ("Hydrogen Fuel Cells", 100, 3),
+    ("Coal", 30, 2000),                         ("Natural Gas (Combined Cycle)", 95, 1000),
+    ("Natural Gas (Open Cycle)", 100, 500),     ("Nuclear", 90, 600),
+    ("Wind (onshore)", 2.5, 10),                  ("Wind (Offshore)", 2.5, 10),
+    ("Solar Photovoltaic", 2.5, 500),             ("Concentrated Solar Power", 2.5, 100),
+    ("Large-Scale Hydropower", 15, 300),        ("Geothermal", 70, 70),
+    ("Biomass (Wood)", 25, 70),                 ("Biomass (Agricultural Waste)", 45, 30),
+    ("Biogas (Landfills)", 60, 10),             ("Tidal Power", 2.5, 3),
+    ("Wave Power", 2.5, 4),                     ("Hydrogen Fuel Cells", 100, 3),
     ("Waste-to-Energy (Incineration)", 60, 10), ("Waste-to-Energy (Landfill Gas)", 50, 1),
-    ("Hydrogen Gas Turbine", 70, 200),          ("Compressed Air Energy", 80, 10),
-    ("Pumped Storage Hydroelectric", 40, 100),  ("Shale Oil Power Generation", 100, 10),
-    ("Coal-to-Liquid", 200, 100),               ("Concentrated Solar Thermal", 80, 50),
-    ("Organic Photovoltaic", 100, 1),           ("Microgrids (Renewable)", 75, 5),
-    ("Small Modular Reactors", 90, 100),        ("Ocean Thermal Energy Conversion", 200, 20),
-    ("Algal Biofuel", 150, 20),                ("Magnetohydrodynamic", 150, 100) 
+    ("Hydrogen Gas Turbine", 150, 200),          ("Compressed Air Energy", 50, 10),
+    ("Pumped Storage Hydroelectric", 20, 100),  ("Shale Oil Power Generation", 150, 10),
+    ("Coal-to-Liquid", 35, 100),               ("Concentrated Solar Thermal", 2.5, 50),
+    ("Organic Photovoltaic", 2.5, 1),           ("Microgrids (Renewable)", 10, 5),
+    ("Small Modular Reactors", 0, 100),        ("Ocean Thermal Energy Conversion", 2.5, 20),
+    ("Algae Biofuel", 80, 20),                 ("Magnetohydrodynamic", 10, 100) 
 ] 
-# Anything with wind and solar should be zero or near zero
-# Coal most expensive. Natural Gas is more expensive then coal
+# Small Modular Reactor: Initial - (-50,000)
+# Wind (offshore): Initial - (-50,000)
 
 # GLOBAL VARIABLES
 how_many_rounds = 15
