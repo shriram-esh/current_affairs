@@ -1,266 +1,365 @@
-import numpy as np
-from scipy.optimize import minimize
 import random
-from scipy.optimize import linprog
+import json
 
-#defines each bidder
-class Data:
-    
-    def __init__(self, name, bid_size, profit): #GIVE PLAYERS AN INITIAL CAPITAL
-        self.name = name #identify the player
-        self.bids = []*bid_size
-        self.profit = profit
-        self.hist = []
 
-class bid:
+assets = [
+    ("Coal", 30, 2000),                         ("Natural Gas (Combined Cycle)", 95, 1000),
+    ("Natural Gas (Open Cycle)", 100, 500),     ("Nuclear", 90, 600),
+    ("Wind (onshore)", 2.5, 10),                ("Wind (Offshore)", 2.5, 10),
+    ("Solar Photovoltaic", 2.5, 500),           ("Concentrated Solar Power", 2.5, 100),
+    ("Large-Scale Hydropower", 15, 300),        ("Geothermal", 70, 70),
+    ("Biomass (Wood)", 25, 70),                 ("Biomass (Agricultural Waste)", 45, 30),
+    ("Biogas (Landfills)", 60, 10),             ("Tidal Power", 2.5, 3),
+    ("Wave Power", 2.5, 4),                     ("Hydrogen Fuel Cells", 100, 3),
+    ("Waste-to-Energy (Incineration)", 60, 10), ("Waste-to-Energy (Landfill Gas)", 50, 1),
+    ("Hydrogen Gas Turbine", 150, 200),         ("Compressed Air Energy", 50, 10),
+    ("Pumped Storage Hydroelectric", 20, 100),  ("Shale Oil Power Generation", 150, 10),
+    ("Coal-to-Liquid", 35, 100),                ("Concentrated Solar Thermal", 2.5, 50),
+    ("Organic Photovoltaic", 2.5, 1),           ("Microgrids (Renewable)", 10, 5),
+    ("Small Modular Reactors", 0, 100),         ("Ocean Thermal Energy Conversion", 2.5, 20),
+    ("Algae Biofuel", 80, 20),                  ("Magnetohydrodynamic", 10, 100) 
+] 
+
+def get_random_rgba():
+    return f"rgba({random.randint(0,255)},{random.randint(0,255)},{random.randint(0,255)},1)"
+
+class Bid:
     def __init__(self, asset, units, price, quantity):
-        self.asset = asset #index of the asset in the asset array
+        self.asset = asset
         self.units = units
         self.price = price
         self.quantity = quantity
-
-
-class History:
     
-    def __init__(self, profit, round_num, bids):
-        # self.price = price
-        # self.quantity_cleared = quantity_cleared
-        self.bids = bids #what was bid NOT what was cleared
+    # "get_units" returns units
+    # inputs: none
+    # output: units (int)
+    def get_units(self):
+        return self.units
+    
+    # "get_json_bid" returns json object for Bid class
+    # input: none
+    # output: json object 
+    def get_json_bid(self):
+        x = {
+            "asset": self.asset, 
+            "units": self.units,
+            "price": self.price,
+            "quantity": self.quantity 
+        }
+        return json.dumps(x)
+
+class Data:
+    def __init__(self, username, bid_size, profit):
+        self.username = username 
+        self.bids = [] * bid_size 
         self.profit = profit
-        self.round_num = round_num
+        self.color = get_random_rgba()
+        self.hasBid = False
 
-    def __str__(self):
-        str_to_print = f"\n"
+    # Start Functions
+
+    # "get_player_bids" gets the name of the player
+    # input: username (string)
+    # output: bids [json_object, json_object]
+    # NOTE call get_json_bid for each bid before returning it
+    #QUESTION Im not sure what the username input is for cause like i dont think data has acess to the list of players
+    def get_player_bids(self, username):
+        json_bids = [b.get_json_data() for b in self.bids]
+        return json_bids
+
+    # "has_player_bid" gets if the player had bid
+    # input: none
+    # output: hasBid (boolean)
+    def has_player_bid(self):
+        return self.hasBid
+
+    # "get_all_player_units" should call get_units from Bid class
+    # input: none
+    # output: toal_bid_units (int)
+    def get_all_player_units(self):
+        count = 0
         for b in self.bids:
-            str_to_print += f"and bid {b.quantity} units of {assets[b.asset][0]} at ${b.price}\n"
-        return f"ended round {self.round_num+1} with ${self.profit} {str_to_print}"
-        # return f"Cleared {self.quantity} units at ${self.price}, ending the round with ${self.profit}"
+            coutn += b.get_units()
+        return count
+
+    # "set_bid_status" should set biStatus to input
+    # input: status (boolean)
+    # output: none
+    def set_bid_status(self, input):
+        self.hasbid = input
+
+    # "get_json_data" returns json object for Data class
+    # input: none
+    # output: json object 
+    def get_json_data(self):
+
+        x = { 
+            "username": self.username, 
+            "bids": self.get_player_bids(self.username),
+            "profit": self.profit,
+            "color": self.color,
+            "hasBid": self.hasBid 
+            }
+        return json.dumps(x)
 
 
-#Data taken roughly from https://en.wikipedia.org/wiki/Cost_of_electricity_by_source and https://www.eia.gov/energyexplained/electricity/electricity-in-the-us-generation-capacity-and-sales.php
-# each tuple of the form (energy type, cost of generation, max generation)
+class Player:
+    def __init__(self, username, sid=""):
+        self.username = username
+        self.sid = sid
+    
+    # Start Functions
 
-#ASSETS WE DEFINED FEB 19
-assets = [
-    ("Coal", 140, 2000),                        ("Natural Gas (Combined Cycle)", 120, 1000),
-    ("Natural Gas (Open Cycle)", 150, 500),     ("Nuclear", 90, 600),
-    ("Wind (onshore)", 20, 10),                 ("Wind (Offshore)", 60, 10),
-    ("Soloar Photovoltaic", 30, 500),           ("Concentrated Solar Power", 80, 100),
-    ("Large-Scale Hydropower", 60, 300),        ("Geothermal", 70, 70),
-    ("Biomass (Wood)", 50, 70),                 ("Biomass (Agricultural Waste)",100, 30),
-    ("Biogas (Landfills)", 80, 10),             ("Tidal Power", 150, 3),
-    ("Wave Power", 100, 4),                     ("Hydrogen Fuel Cells", 100, 3),
-    ("Waste-to-Energy (Incineration)", 60, 10), ("Waste-to-Energy (Landfill Gas)", 50, 1),
-    ("Hydrogen Gas Turbine", 70, 200),          ("Compressed Air Energy", 80, 10),
-    ("Pumped Storage Hydroelectric", 40, 100),  ("Shale Oil Power Generation", 100, 10),
-    ("Coal-to-Liquid", 200, 100),               ("Concentrated Solar Thermal", 80, 50),
-    ("Organic Photovoltaic", 100, 1),           ("Microgrids (Renewable)", 75, 5),
-    ("Small Modular Reactors", 90, 100),        ("Ocean Thermal Energy Conversion", 200, 20),
-    (" Algal Biofuel", 150, 20),                ("Magnetohydrodynamic", 150, 100) 
-        ] 
-        # GIVE EACH POWER PLANT A CAPACITY
+    # "get_player_name" gets the name of the player
+    # input: none
+    # output: username (string)
+    def get_player_name(self):
+        return self.username
 
-# #ASSETS FROM QUESTION
-# assets = [("Wind Power", 75, 0.2*(total)),  #0
-#           ("Nuclear", 15, 0.1*(total)),     #1
-#           ("Solar", 0, 0.05*(total)),       #2
-#           ("CHP", 42, 0.05*(total)),        #3
-#           ("Hydropower", 10, 0.1*(total))]  #4
+    # "get_player_sid" gets the sid of the player
+    # input: none
+    # output: sid (string)
+    def get_player_sid(self):
+        return self.sid
+
+    # "set_player_sid" sets the sid of the player
+    # input: sid (string)
+    # output: none
+    def set_player_sid(self, input_sid):
+        self.sid = input_sid
+
+    # "get_json_player" returns json object for Player class
+    # input: none
+    # output: json object { "username": username, "sid": sid }
+    def get_json_player(self):
+        x = {
+            "username": self.username, 
+            "sid": self.sid
+        }
+
+        # convert into JSON:
+        return json.dumps(x)
+
+    
+
+class Room:
+    def __init__(self, admin_username):
+        self.admin = Player(admin_username)
+        self.players = []  # List of Player objects
+        self.playersData = []  # List of Data objects
+        self.game = {"started": False, "currentRound": 1}
+
+    # Start Functions
+
+    def add_player(self, username, sid=""):
+        self.players.append(Player(username, sid))
+
+    def add_data(self, name, bid_size, profit):
+        self.playersData.append(Data(name, bid_size, profit))
+
+    # "get_room_status" gets the game status "started"
+    # input: none
+    # output: game_status (boolean)
+    def get_room_status(self):
+        return self.game["started"]
+
+    # "set_room_status" sets the game status "started"
+    # input: game_status (boolean)
+    # output: none
+    def set_room_status(self, input_game_status):
+        self.game["started"] = input_game_status
+        #QUESTION should this take an input, or just change the member variable
+
+    # "remove_player" removes player from room
+    # input: username (string)
+    # output: none
+    def remove_player(self, name):
+        self.players.remove(name)
+
+    # "create_playersData" randomizes the quantity and portfolio for everyone
+    # input: none (assets are above and players are in this class)
+    # output: none
+    # NOTE I'm not sure about this but just implement the define_players code in this function to work
+    def create_playersData(self):
+        asset_indexes = list(range(len(assets)))
+        for d in self.playersData:
+            for b in d.bids:
+                assets_indexes = asset_indexes if assets_indexes == [] else list(range(len(assets)))
+                rand_asset = random.choice(asset_indexes)
+                asset_indexes.remove(rand_asset)
+                b.asset = assets[rand_asset[1]] #QUESTION do you just want the string part?
+                b.units = random.randint(400, 800)
+                b.price = assets[rand_asset[2]]
+                b. quantity = random.randint(400, 800) #QUESTION i lowk forgot the difference between asset and units, so I initialized to same range
+
+    # TODO "get_sid_from_players" should call get_player_sid in player class
+    # input: username (string)
+    # output: sid (string)
+    def get_sid_from_players(self, input_username):
+        p = self.get_player(input_username)
+        return p.get_player_sid()
+
+    # TODO "set_sid_from_players" should call set_player_sid in player class
+    # input: username (string), sid (string)
+    # output: none
+    def set_sid_from_players(self, input_username, input_sid):
+        p = self.get_player(input_username)
+        p.set_player_sid(input_sid)
+
+    # TODO "get_player_data" should call set_player_sid in player class
+    # input: username (string)
+    # output: data ([{"asset": ..., "units": ..., "generation": ..., "currentRound": ...}, ...])
+    def get_player_data(self, input_username):
+        data = []
+        p = self.get_data(input_username)
+        for b in p.bids:
+            data.append(p.get_json_data())#QUESTION did u want this output as a json? and can the currentRound be a seperate function? (i made it below) cause it would be the same for each bid right?
+        return data
+    
+    # TODO "get_player_bid_status" should call has_player_bid in Data class
+    # input: username (string)
+    # output: hasBid (boolean)
+    def get_player_bid_status(self, input_username):
+        d = self.get_data(input_username)
+        return d.has_player_bid()
 
 
-##########################
-#DEFINE THE NUMBER OF PLAYERS AND INITIALIZE THEM
-##########################
-def define_players(usable_assets):
-    num_players = int(input("Enter the number of players: "))
+    # TODO "has_all_players_bid" return whether all players have bid (call has_player_bid)
+    # input: none
+    # output: yes (boolean)
+    def has_all_players_bid(self):
+        for d in self.playersData:
+            if(not d.has_player_bid()):
+                return False
+        return True
+    
+    # TODO "set_all_players_bid_status" call set_bid_status in Data class
+    # input: status (boolean)
+    # output: none
+    def set_all_players_bid_status(self, input_status):
+        for p in self.playersData:
+            p.set_bid_status(input_status)
 
-    #prompt for data input into array
-    data_list = []
-    ids = [] #the players names serve as their unique ID, this array will hold all the IDs
+    # TODO "get_total_units" call get_all_player_units
+    # input: none
+    # output: yes (boolean)
+    def get_total_units(self):
+        count = 0
+        for d in self.playersData:
+            for b in d.bids:
+                count += len(b)
+        return count #QUESTION do you want a bool or like the number
 
-    #define all the players
-    for i in range(num_players):
-        # temp = Data
-        name = (input("Please enter a unique username: "))
-        while(name in ids or name == ""):
-            name= input("Please enter different username that hasn't been taken: ")
+    # TODO "get_current_round" return the current round
+    # input: none
+    # output: round (int)
+    def get_current_round(self):
+        return self.game["currentRound"]
 
-        ids.append(name)
-        profit = 0
-        data_list.append(Data(name, 1, profit))
-        print(f"you start with ${profit}")
+    # TODO "increment_round" add +1 to round
+    # input: none
+    # output: none
+    def increment_round(self):
+        self.game["currentRound"] = self.game["currentRound"]+1
+
+    # TODO "get_json_room" returns a json object for Room class
+    # NOTE you will need to call the json object functions for the "admin", "players", and "playersData"
+    # input: none
+    # output: json_object 
+    def get_json_room(self):
+        x = {
+            "admin": self.admin.get_json_player(),
+            "players": [p.get_json_player() for p in self.players], #(call get_json_player on each element of the array),
+            "playersData": [d.get_json_data() for d in self.playersData], #(call get_json_data on each element of the array),
+            "game": self.game
+            }
+        return json.dumps(x)
+
+    #returns the player given a username (used as a private function)
+    def get_player(self, input_username):
+        return next((obj for obj in self.players if obj.username == input_username), None)
+    
+    def get_data(self, input_username):
+        return next((obj for obj in self.playersData if obj.username == input_username), None)
+
+class RoomManager:
+    def __init__(self):
+        self.rooms = {} # dictionary of Room classes
+
+    # Start Functions
+    # Here is an example of a function
+    def create_room(self, admin_username, room_code):
+        self.rooms[room_code] = Room(admin_username)
+
+    # TODO "delete_room" deletes the room from rooms
+    # input: room_code (string)
+    # output: none
+    def delete_room(self, input_room_code):
+        del self.rooms[input_room_code]
         
-        add_asset(usable_assets, data_list[i])
+    # TODO "get_rooms" returns all the room codes
+    # input: none
+    # output: rooms dictionary ({})
+    def get_rooms(self):
+        return self.rooms
 
-    return data_list, ids
+    # TODO "get_game_status" this should call "get_room_status" (Look in Rooms class)
+    # input: room_code (string)
+    # output: game_status (boolean)
+    def get_game_status(self, input_room_code):
+        return (self.rooms[input_room_code]).get_room_status()
 
-#adds one asset to one player
-def add_asset(usable_assets, player):
-    #rand_elem = random.randint(0, len(assets)-1)
-    if len(usable_assets) == 0:
-        usable_assets = list(range(len(assets)))
+    # TODO "set_game_status" this should call "set_room_status" (Look in Rooms class)
+    # input: room_code (string), game_status (boolean)
+    # output: none
+    def set_game_status(self, input_room_code, input_game_status):
+        return (self.rooms[input_room_code]).set_room_status(input_game_status)
 
-    
+    # TODO "get_sid_from_players_room" should call get_sid_from_players in Room class
+    # input: username (string)
+    # output: sid (string)
+    def get_sid_from_players_room(self, input_username, input_room_code):#QUESTION wouldnt this also need the room code?
+        return self.rooms[input_room_code].get_sid_from_players(input_username)
 
-    asset_num = int(random.randint(0,len(usable_assets)-1))#retruns the index of the usable_assets list. at that index is the index of the asset
+    # TODO "set_sid_from_players_room" should call set_sid_from_players in Room class
+    # input: username (string), sid (string)
+    # output: none
+    def set_sid_from_players_room(self, input_room_code, input_username, input_sid):#QUESTION doenst this need room code too?
+        self.rooms[input_room_code].set_sid_from_players(input_username, input_sid)
 
-    player.bids.append(bid(usable_assets[asset_num],int(random.randint(1,10)),0,0))
-    usable_assets.pop(asset_num)
+    # TODO "get_player_stats" should call get_player_data
+    # input: username (string)
+    # output: data ([{"asset": ..., "units": ..., "generation": ..., "currentRound": ...}, ...])
+    def get_player_stats(self, input_room_code, input_username):#QUESTION room code here too?
+        return self.rooms[input_room_code].get_player_data(input_username)
 
-    #player.bids[(len(player.bids)-1)].units = int(input("Enter the starting number of units: "))
-    # print(f"and {player.bids[j].units} units of {assets[player.bids[j].asset][0]}")
+    # TODO "get_players_room_bid_status" should call get_player_bid_status in Room class
+    # input: username (string)
+    # output: yes (boolean)
+    def get_players_room_bid_status(self, input_room_code, input_username):
+        return self.rooms[input_room_code].get_player_bid_status(input_username)
 
-    # for b in player.bids:    
-    #     print(f"and {b.units} units of {assets[b.asset][0]} who's cost of generation is {assets[b.asset][1]} and who's max generation is {assets[b.asset][2]}")
-    # print("")
+    # TODO "get_rooms_total_bid_units" call get_total_units
+    # input: code (string)
+    # output: units (int)
+    def get_rooms_total_bid_units(self, input_room_code):
+        return self.rooms[input_room_code].get_total_units()
 
-    
-    for b in player.bids:
-        print(f"{player.name} has {b.units} units of {assets[b.asset][0]} who's cost of generation is {assets[b.asset][1]} and who's max generation is {assets[b.asset][2]}")
-    print("")
+    # TODO "get_room_current_round" call get_current_round in Room class
+    # input: code (string)
+    # output: round (int)
+    def get_room_current_round(self, input_room_code):
+        return self.rooms[input_room_code].get_current_round()
 
-
-######################
-#ASK EACH PLAYER FOR A LEGAL BID
-######################
-def get_bids(players, market_cap): #WHAT IS THE MAX QUANTITY YOU CAN BID? THE NUMBER OF UNITS YOU HAVE OR SMTH TO DO WITH MAX GENERATION?
-    for temp in (players):
-        Len = len(temp.bids)
-        for i in range(Len):
-            price = ((input(f"{temp.name}, enter the price of your bid for {assets[temp.bids[i].asset][0]} or 'd' for the default bid: ")))
-            if price == "d":
-                 temp.bids[i].price = assets[temp.bids[i].asset][1]
-                 temp.bids[i].quantity = temp.bids[i].units
-                 print(f"${temp.bids[i].price} bid for {temp.bids[i].quantity} units")
-                 continue
-            
-            while((not price.isdigit()) or (price.isdigit() and (float(price) < 0 or float(price) > market_cap))):
-                    price = ((input("Please enter a differnt price (ensure it is non-negative number below the market cap): ")))
-
-            temp.bids[i].price = (float(price))
-
-            quantity = ((input(f"{temp.name} enter the quantity of your bid: ")))                 
-            while((not quantity.isdigit()) or (quantity.isdigit() and (float(quantity) < 0 or float(quantity) > temp.bids[i].units))): #assets[temp.bids[i].asset][2]) = max generation
-                    quantity=((input("Please enter a differnt quantity (ensure it is non-negative number below the number of units you have): ")))
-
-            temp.bids[i].quantity = (float(quantity))
-        print(" ")
-
-
-####################
-#PRINT THE DETAILS OF THE LAST ROUND:
-#DEMAND, MARKET_PRICE, PROFIT OF EACH PLAYER
-####################
-def print_results(Demand, market_price, data_list):
-    #print the Demand and market price 
-    print(f"For a demand of: {Demand}")
-    print(f"The Market price was: {market_price}")
-    print(f"The Demand Charges: {market_price * Demand}\n\n")
+    # TODO "increment_room_round" call increment_round in Room class
+    # input: code (string)
+    # output: none
+    def increment_room_round(self, input_room_code):
+        return self.rooms[input_room_code].increment_round()
 
 
-    #print the profits for each player
-    for dat in data_list:
-        print(f"profits for {dat.name}: {dat.profit}")
-
-
-###############
-#UPDATES THE HISTORY ARR OF EACH PLAYER
-###############
-def update_history(data_list, round_num):
-    for temp in (data_list):
-        (temp.hist).append(History(temp.profit, round_num, temp.bids))
-        
-
-
-
-
-
-def playRound(market_cap, players, ids, round_num):
-    Demand = int(input("Enter the demand for this round: "))
-    get_bids(players, market_cap)
-
-    c = [] #prices
-    u = [] #quantities of each good
-    b_eq = [Demand, 0]
-
-    #unzip the peoples bids into one vector
-    for person in players:
-        for b in person.bids:
-            c.append(b.price)
-            u.append(b.quantity)
-
-    #l = [0]*len(c)
-    A_eq = [[1]*len(c), [0]*len(c)]
-    bounds = []
-    for upper_bound in u:
-                bounds.append((0, upper_bound))
-
-    #define the quantities cleared and market price USING MAGIC
-    if(sum(u)>=Demand):
-        # res = linprog(c, A_eq=A_eq, b_eq=b_eq, bounds=bounds, method='simplex', options={"tol": 1e-6})
-        res = linprog(c, A_eq=A_eq, b_eq=b_eq, bounds=bounds)
-        print(f"The marginal returned from LinProg: {res.eqlin["marginals"]}")
-        market_price = res.eqlin["marginals"][0]
-        print(f"The vector x returned from LinProg{res.x}\n\n")
-        x = res.x
-    
-    else: #if the demand was not met, then the cleared quantities is the bid quantities, and the market price is the highest price
-        print("Supply did not meet the Demand so all quantitties are cleared")
-        print(f"Quantities bid: {u}\n")
-        market_price = max(c)
-        x = u
-
-    #calculate people's profits
-    count = 0 #parsing the x vector
-    for person in players:
-        for b in person.bids:
-            if count < len(x):
-                person.profit += (market_price - assets[b.asset][1])*x[count] # (market price - cost of generation) * quanitty cleared
-            count += 1 
-        print(f"{person.name} ended round {round_num} with profit {person.profit}")
-    print("\n\n")
-            # make it output what just happened in one round - without too much random
-
-    # for x in players:
-    #     print(f"profits for {x.name}: {x.profit}")
-
-    players = [x for x in players if x.profit > 0]
-    print(f"if you are bankrupt, you are being kicked out :(")
-    #print(f"Lenth of PLayers after removed: {len(players)}")
-
-    ids = [x.name for x in players]
-    print(f"players left {ids}")
-
-    print_results(Demand, market_price, players)
-    update_history(players, round_num)
-
-    return players, ids
-
-
-
-################
-##MAIN FUNCTION
-################
-how_many_rounds = int(input("Enter the number of rounds to play: "))
-number_units = 1 #number of units to start with
-market_cap = int(9000) #int(input("Enter the Market Cap: "))
-usable_assets = list(range(len(assets)))
-print(" ")
-
-players, ids = define_players(usable_assets)
-print(ids)
-
-count=0
-while (count < how_many_rounds) and (len(players)>1):
-    print(f"Length of players: {len(players)}")
-    players, ids = playRound(market_cap, players, ids, count)
-    count+=1
-
-    if count%2 == 0:
-         for p in players:
-              add_asset(usable_assets, p)
-
-    print("history up to this point for remaining players: ")
-    for p in players:
-        for h in p.hist:
-            print(f"{p.name} {h} \n")
+    # TODO "set_all_players_in_room_bid_status" call set_all_players_bid_status in Room class
+    # input: code (string), status (boolean)
+    # output: none
+    def set_all_players_in_room_bid_status(self, input_room_code, input_status):
+        return self.rooms[input_room_code].set_all_players_bid_status(input_status)
