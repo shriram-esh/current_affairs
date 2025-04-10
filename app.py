@@ -10,7 +10,7 @@ import random
 import os
 import random
 import string
-from gameplay import *
+from model import *
 
 load_dotenv()
 
@@ -18,14 +18,7 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = "secret_key"
 socketio = SocketIO(app, cors_allowed_origins='*', manage_session=False)
 
-rooms = {}
-
-def generate_code():
-    while (True):
-        code = ''.join(random.choices(string.ascii_uppercase, k=4))
-        if code not in rooms:
-            break
-    return code
+room_manager = RoomManager()
 
 def linprog_to_graph(in_data, in_linprog, demand, marketPrice):
     cur_width = 0
@@ -74,21 +67,21 @@ def login_required(f):
     def decorated_function(*args, **kwargs):
         room = session.get("room")
         name = session.get("name")
-        print(f"Room: {room} Name: {name}")
-        if room is None or name is None or room not in rooms:  # Check if user is in session
-            print("'index' check")
+        
+        current_room = room_manager.get_room(room)
+        if room is None or name is None or current_room is None:  # Check if user is in session
             if request.endpoint != "index":
-                print("Redirect to 'index'")
+                print("Redirect to index")
                 return redirect(url_for("index"))  # Redirect to login if not logged in
-        elif not rooms[room]["game"]["started"]: # Check if game is still in lobby
-            print("'lobby' check")
+            
+        elif not current_room.get_room_status(): # Check if game is still in lobby
             if request.endpoint != "lobby":
-                print("Redirect to 'lobby'")
+                print("Redirect to lobby")
                 return redirect(url_for("lobby"))
-        elif rooms[room]["game"]["started"]:
-            print("'game' check")
+            
+        elif current_room.get_room_status():
             if request.endpoint != "game":
-                print("Redirect to 'game'")
+                print("Redirect to game")
                 return redirect(url_for("game"))
     
         return f(*args, **kwargs)  # Otherwise, proceed to the game
@@ -102,9 +95,6 @@ def logout():
 @app.route('/', methods=['GET', 'POST'])
 @login_required
 def index():
-    room = session.get("room")
-    name = session.get("name")
-
     if request.method == 'POST':
         username = request.form.get('username')
         action = request.form.get('action')
@@ -113,26 +103,21 @@ def index():
             context = { "err": True, "msg": "Enter a valid username" }
             return render_template('index.html', ctx=context)
         if action == "Create Room":
-            room = generate_code()
-            rooms[room]={
-                            "admin": {"username": username, "sid": ""},
-                            "players": [],
-                            "dataList": [], 
-                            "game": {
-                                        "started": False,
-                                        "currentRound": 1
-                                    }
-                        }
-            session["room"] = room
+            room_code = room_manager.create_room(username)
+            session["room"] = room_code
             session["name"] = username
 
+            print("Create Room")
             return redirect(url_for('lobby'))
         elif action == "Join Room":
             code = request.form.get('join-code')
-            if code in rooms and rooms[code]["game"]["started"]:
+            joining_room = room_manager.get_room(code)
+
+            if joining_room is not None and joining_room.get_room_status():
                 context = { "err": True, "msg": "Game Started" }
                 return render_template('index.html', ctx=context)
-            if code in rooms:
+            
+            if joining_room is not None:
                 session["room"] = code
                 session["name"] = username
 
@@ -148,8 +133,6 @@ def index():
 def lobby():
     room = session.get("room")
     name = session.get("name")
-    if room is None or name is None or room not in rooms:
-        return redirect(url_for("index"))
     
     if request.method == "POST":
         action = request.form.get('action')
@@ -157,8 +140,10 @@ def lobby():
         if action == 'leave': 
             return redirect(url_for('logout'))
     
-    context={ "room": room, "is_admin": name == rooms[room]["admin"]["username"], "admin": rooms[room]["admin"]["username"] }
-    print(context)
+    lobby_room = room_manager.get_room(room)
+
+    context = { "room": room, "is_admin": name == lobby_room.get_admin(), "admin": lobby_room.get_admin() }
+
     return render_template('lobby.html', ctx=context)
 
 @app.route('/game', methods=['GET', 'POST'])
@@ -175,56 +160,53 @@ class LobbyNamespace(Namespace):
     def on_connect(self):
         room = session.get("room")
         name = session.get("name")
+        lobby_room = room_manager.get_room(room)
 
-        if room in rooms and name:
+        if lobby_room is not None and name:
             print(f"User {name} joined room {room}")
-            print(rooms[room])
             join_room(room)
-            if rooms[room]["admin"]["username"] != name:
-                rooms[room]["players"].append(  
-                                                {
-                                                    "username": name,
-                                                }
-                                            )
-            socketio.emit("user_change", rooms[room], namespace='/lobby', to=room)
+
+            if lobby_room.get_admin() != name:
+                lobby_room.add_player(name)
+
+            socketio.emit("user_change", lobby_room.get_json_room(), namespace='/lobby', to=room)
         else:
             socketio.emit("player_left", {'msg': "gone"}, namespace='/lobby', to=request.sid)
 
     def on_disconnect(self, reason):
         room = session.get("room")
         name = session.get("name")
+        lobby_room = room_manager.get_room(room)
 
         print(f"User {name} left room {room}")
         leave_room(room)
 
-        if room not in rooms:
+        if lobby_room is None:
             return
         
-        if rooms[room]["game"]["started"]:
+        if lobby_room.get_room_status():
             return
         
-        if rooms[room]["admin"]["username"] == name:
+        if lobby_room.get_admin() == name:
             print(f"Delete room {room}")
             socketio.emit("player_left", {'msg': "gone"}, namespace='/lobby', to=room)
-            del rooms[room]
+            room_manager.delete_room(room)
             return
 
-        for player in rooms[room]["players"]:
-            if player["username"] == name:
-                rooms[room]["players"].remove(player)
-                break
+        lobby_room.remove_player(name)
 
-        socketio.emit("user_change", rooms[room], namespace='/lobby', to=room)
+        socketio.emit("user_change", lobby_room.get_json_room(), namespace='/lobby', to=room)
 
     def on_start_game(self, data):
         room = session.get("room")
-
-        # randomize quantity and portfolio for everyone
-        rooms[room]["dataList"] = define_players(usable_assets, rooms[room]["players"])
+        lobby_room = room_manager.get_room(room)
         
-        if room in rooms and rooms[room]["players"]:
-            socketio.emit('game_start', {'message': 'Game is starting!'}, namespace='/lobby', to=room)
-            rooms[room]["game"]["started"] = True
+        # randomize quantity and portfolio for everyone
+        # rooms[room]["dataList"] = define_players(usable_assets, rooms[room]["players"])
+        lobby_room.create_players_data()
+        lobby_room.set_room_status(True)
+        
+        socketio.emit('game_start', {'message': 'Game is starting!'}, namespace='/lobby', to=room)
 
 class GameNamespace(Namespace):
     def on_connect(self):
@@ -278,7 +260,9 @@ class GameNamespace(Namespace):
         if room not in rooms:
             disconnect()
 
+        print(f"Before Parse: {data}")
         parsed_data = parse_qs(data.get('data', ''))
+        print(f"Before Clean: {parsed_data}")
         parsed_data_clean = {}
 
         for key, values in parsed_data.items():
@@ -293,6 +277,7 @@ class GameNamespace(Namespace):
                     # If both conversions fail, keep it as original type
                     parsed_data_clean[key] = values[0]
         
+        print(parsed_data_clean)
         # Have They Already Placed a Bid
         for player in rooms[room]["dataList"]:
             if player.name == name and player.hasBid:
