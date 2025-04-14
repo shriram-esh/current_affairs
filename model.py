@@ -42,7 +42,7 @@ class Bid:
             "price": self.price,
             "quantity": self.quantity 
         }
-        return json.dumps(x)
+        return x
 
 class Data:
     def __init__(self, username, bid_size, profit):
@@ -69,12 +69,6 @@ class Data:
     def set_bid_status(self, input):
         self.hasbid = input
 
-    def get_python_dict(self):
-        return {
-            "username": self.username,
-            "sid": self.sid
-        }
-
     def get_json_data(self):
         x = { 
             "username": self.username, 
@@ -83,7 +77,7 @@ class Data:
             "color": self.color,
             "hasBid": self.hasBid 
             }
-        return json.dumps(x)
+        return x
 
 
 class Player:
@@ -100,19 +94,13 @@ class Player:
     def set_player_sid(self, input_sid):
         self.sid = input_sid
 
-    def get_python_dict(self):
-        return {
-            "username": self.username,
-            "sid": self.sid
-        }
-
     def get_json_player(self):
         x = {
             "username": self.username, 
             "sid": self.sid
         }
 
-        return json.dumps(x)
+        return x
 
 class Room:
     def __init__(self, admin_username):
@@ -207,7 +195,7 @@ class Room:
             "playersData": [d.get_json_data() for d in self.playersData], #(call get_json_data on each element of the array),
             "game": self.game
             }
-        return json.dumps(x)
+        return x
 
     def get_player(self, input_username):
         return next((obj for obj in self.players if obj.username == input_username), None)
