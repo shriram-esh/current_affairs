@@ -26,12 +26,18 @@ def get_random_rgba():
     return f"rgba({random.randint(0,255)},{random.randint(0,255)},{random.randint(0,255)},1)"
 
 class Bid:
-    def __init__(self, asset, units, price, quantity):
+    def __init__(self):
+        self.asset = ""
+        self.units = 0
+        self.generation = 0
+        self.price = 0
+        self.quantity = 0
+    
+    def set_asset_data(self, asset, units, generation):
         self.asset = asset
         self.units = units
-        self.price = price
-        self.quantity = quantity
-    
+        self.generation = generation
+        
     def get_units(self):
         return self.units
     
@@ -39,6 +45,7 @@ class Bid:
         x = {
             "asset": self.asset, 
             "units": self.units,
+            "generation": self.generation,
             "price": self.price,
             "quantity": self.quantity 
         }
@@ -47,15 +54,13 @@ class Bid:
 class Data:
     def __init__(self, username, bid_size, profit):
         self.username = username 
-        self.bids = [] * bid_size 
+        self.bids = [Bid() for _ in range(bid_size)]
         self.profit = profit
         self.color = get_random_rgba()
         self.hasBid = False
 
-    # QUESTION Im not sure what the username input is for cause like i dont think data has acess to the list of players
-    def get_player_bids(self, username):
-        json_bids = [b.get_json_data() for b in self.bids]
-        return json_bids
+    def get_player_bids(self):
+        return self.bids
 
     def has_player_bid(self):
         return self.hasBid
@@ -70,15 +75,18 @@ class Data:
         self.hasbid = input
 
     def get_json_data(self):
+        bids = []
+        for bid in self.get_player_bids():
+            bids.append(bid.get_json_bid())
+
         x = { 
             "username": self.username, 
-            "bids": self.get_player_bids(self.username),
+            "bids": bids,
             "profit": self.profit,
             "color": self.color,
             "hasBid": self.hasBid 
             }
         return x
-
 
 class Player:
     def __init__(self, username, sid=""):
@@ -109,7 +117,6 @@ class Room:
         self.playersData = []  # List of Data objects
         self.game = {"started": False, "currentRound": 1}
 
-    # Question Rename variables to something better
     def add_player(self, username, sid=""):
         self.players.append(Player(username, sid))
 
@@ -132,34 +139,40 @@ class Room:
                 break
 
     def create_players_data(self):
+        for d in self.players:
+            self.add_data(d.get_player_name(), 1, 0)
+
         asset_indexes = list(range(len(assets)))
-        for d in self.playersData:
-            for b in d.bids:
-                assets_indexes = asset_indexes if assets_indexes == [] else list(range(len(assets)))
+        for data in self.playersData:
+            for b in data.get_player_bids():
+                # Reset the asset index list if it's empty
+                if not asset_indexes:
+                    asset_indexes = list(range(len(assets)))
+                
                 rand_asset = random.choice(asset_indexes)
                 asset_indexes.remove(rand_asset)
-                b.asset = assets[rand_asset[1]] #QUESTION do you just want the string part?
-                b.units = random.randint(400, 800)
-                b.price = assets[rand_asset[2]]
-                b.quantity = random.randint(400, 800) #QUESTION i lowk forgot the difference between asset and units, so I initialized to same range
+                
+                b.set_asset_data(
+                    assets[rand_asset][0], 
+                    random.randint(400, 800), 
+                    assets[rand_asset][1]
+                )
 
-    # Question Need to iterate through players array
     def get_sid_from_players(self, input_username):
-        p = self.get_player(input_username)
+        p = self.admin
+        if input_username != self.admin.get_player_name():
+            p = self.get_player(input_username)
         return p.get_player_sid()
 
-    # Question Need to iterate through the players array
     def set_sid_from_players(self, input_username, input_sid):
-        p = self.get_player(input_username)
+        p = self.admin
+        if input_username != self.admin.get_player_name():
+            p = self.get_player(input_username)
         p.set_player_sid(input_sid)
 
-    # Question have to iterate through player array
     def get_player_data(self, input_username):
-        data = []
         p = self.get_data(input_username)
-        for b in p.bids:
-            data.append(p.get_json_data())#QUESTION did u want this output as a json? and can the currentRound be a seperate function? (i made it below) cause it would be the same for each bid right?
-        return data
+        return p.get_json_data()
     
     def get_player_bid_status(self, input_username):
         d = self.get_data(input_username)
