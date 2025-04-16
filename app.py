@@ -1,15 +1,9 @@
 from flask import Flask, request, session, render_template, redirect, url_for
-from flask_socketio import SocketIO, Namespace, send, emit, join_room, leave_room, disconnect
+from flask_socketio import SocketIO, Namespace, join_room, leave_room, disconnect
 from functools import wraps
 from dotenv import load_dotenv
-from graph import create_graph
 from urllib.parse import parse_qs
-import numpy as np
 from scipy.optimize import linprog
-import random
-import os
-import random
-import string
 from model import *
 
 load_dotenv()
@@ -151,9 +145,12 @@ def lobby():
 def game():
     room = session.get("room")
     name = session.get("name")
-    if room is None or name is None or room not in rooms:
+    game_room = room_manager.get_room(room)
+
+    if game_room is None:
         return redirect(url_for("index"))
-    context={ "room": rooms[room], "is_admin": name == rooms[room]["admin"]["username"] }
+    
+    context={ "room": game_room.get_json_room(), "is_admin": name == game_room.get_admin() }
     return render_template('game.html', ctx=context)
 
 class LobbyNamespace(Namespace):
@@ -181,10 +178,7 @@ class LobbyNamespace(Namespace):
         print(f"User {name} left room {room}")
         leave_room(room)
 
-        if lobby_room is None:
-            return
-        
-        if lobby_room.get_room_status():
+        if lobby_room is None or lobby_room.get_room_status():
             return
         
         if lobby_room.get_admin() == name:
@@ -201,8 +195,6 @@ class LobbyNamespace(Namespace):
         room = session.get("room")
         lobby_room = room_manager.get_room(room)
         
-        # randomize quantity and portfolio for everyone
-        # rooms[room]["dataList"] = define_players(usable_assets, rooms[room]["players"])
         lobby_room.create_players_data()
         lobby_room.set_room_status(True)
         
@@ -215,19 +207,11 @@ class GameNamespace(Namespace):
         sid = request.sid
 
         join_room(room)
+        game_room = room_manager.get_room(room)
 
-        print(f"User: {name} Room: {room} SID: {sid}")
-
-        if name == rooms[room]["admin"]["username"]:
-            rooms[room]["admin"]["sid"] = sid
-            return
-
-        if room in rooms:
-            for player in rooms[room]["dataList"]:
-                if player.name == name:
-                    player.sid = sid
-                    print(f"User {name} SID updated: {sid}")
-                    return
+        if game_room is not None:
+            print(f"User {name} SID updated: {sid}")
+            game_room.set_sid_from_players(name, sid)
         else:
             disconnect()
 
@@ -239,20 +223,18 @@ class GameNamespace(Namespace):
     def on_get_stats(self):
         room = session.get("room")
         name = session.get("name")
+        game_room = room_manager.get_room(room)
 
-        for player in rooms[room]["dataList"]:
-            if player.name == name:
-                data = []
-                for bid in player.bids: 
-                    data.append({
-                        "asset": assets[bid.asset][0],
-                        "units": bid.units,
-                        "generation": assets[bid.asset][1],
-                        "currentRound": rooms[room]["game"]["currentRound"]
-                    })
-                socketio.emit('send_stats', data, namespace='/game', to=player.sid)
-                print(f"Sent Stats {data} to {player.name}")
-                break
+        if game_room.get_admin() == name:
+            return
+        
+        data = game_room.get_player_data(name)
+        player_sid = game_room.get_sid_from_players(name)
+
+        data["currentRound"] = game_room.get_current_round()
+        
+        socketio.emit('send_stats', data, namespace='/game', to=player_sid)
+        print(f"Sent Stats {data} to {name}")
 
     def on_submit_bid(self, data):
         room = session.get("room")

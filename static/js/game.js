@@ -8,8 +8,8 @@ $(document).ready(function() {
     socket.emit('get_stats');
 
     socket.on('send_stats', (data) => {
-        $('#round').html(data[0]["currentRound"]);
-        const assets = data.map(a => {
+        $('#round').html(data["currentRound"]);
+        const assets = data["bids"].map(a => {
             return `
                 <p><b>Asset Type:</b> ${a['asset']}</p>
                 <p><b>Generation Capacity:</b> ${a['units']} MW</p>
