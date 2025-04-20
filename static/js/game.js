@@ -102,27 +102,55 @@ $(document).ready(function() {
         const barHeight = in_data["barHeight"] // Height of bar
         const colors = in_data["colors"]
         const players = in_data["players"]
+        const costs = in_data["costs"] // Total cost for each player
         const roundNumber = data["roundNumber"]
     
         var data = [
             {
+                type: 'bar',
                 x: xList,
                 y: barHeight,
                 width: widthBar,
+                name: "Profits",
                 marker: {
                     color: colors
                 },
-                type: 'bar',
                 hovertext: widthBar.map((w, i) => `<b>${players[i]}</b><br>Quantity: ${w}<br>Price: ${barHeight[i]}`), 
+                hoverinfo: "text"
+            },
+            {
+                type: 'bar',
+                x: xList,
+                y: costs,
+                width: widthBar,
+                name: "Cost",
+                marker: { color: 'red' },
+                opacity: 0.6,
+                text: costs,
+                textposition: 'outside',
+                textfont: {
+                    color: 'black',
+                    size: 14
+                },
+                hovertext: costs.map((w, i) => `<b>${players[i]}</b><br>Cost: ${w}`), 
                 hoverinfo: "text"
             }
         ];
     
         var layout = {
+            barmode: 'overlay',
             title: {
                 text: `Electricity Market Round ${roundNumber - 1}`
             },
+            xaxis: {
+                title: {
+                    text: 'Quantity (MW)'  // 🡐 Your custom x-axis label
+                }
+            },
             yaxis: {
+                title: {
+                    text: 'Price ($/MWh)'  // 🡐 Your custom y-axis label
+                },
                 type: 'log',
                 range: [Math.log10(1), Math.log10(100000)],
                 tickmode: 'array',
@@ -202,5 +230,5 @@ $(document).ready(function() {
         };
         
         Plotly.newPlot(graph, data, layout, config);
-    }   
+    }
 });
