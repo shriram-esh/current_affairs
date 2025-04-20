@@ -377,13 +377,18 @@ class GameNamespace(Namespace):
         graphData = linprog_to_graph(sorted_bids, x, demand, market_price)
 
         player_profits = []
+        player_gains = []
         for index, bid in enumerate(sorted_bids):
+            gain = (market_price - bid["generation"]) * x[index]
             bid["data"].add_to_profit((market_price - bid["generation"]) * x[index])
+            player_gains.append({"player": bid["player"], "gain": gain})
             player_profits.append({"player": bid["player"], "total": bid["data"].get_profit()})
         sorted_player_profits = sorted(player_profits, key=lambda x: x["total"], reverse=True)
+        sorted_player_gains = sorted(player_gains, key=lambda x: x["gain"], reverse=True)
         data =  {
                     "graphData": graphData,
                     "playerProfits": sorted_player_profits,
+                    "playerGains": sorted_player_gains,
                     "roundNumber": game_room.get_current_round() + 1
                 }
         

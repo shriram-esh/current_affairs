@@ -41,7 +41,18 @@ $(document).ready(function() {
     socket.on('round_over', (data) => {
         $('#errMsg').empty();
         const profits = data["playerProfits"].map(p => `<li id="${p["player"]}" class="bid-unready">${p["player"]}: $${p["total"].toLocaleString()}</li>`).join("");
+        const gains = data["playerGains"].map(g => {
+            let color = ""
+            if (g["gain"] > 0) {
+                color = "positive"
+            } else if (g["gain"] < 0) {
+                color = "negative"
+            }
+            return `<li>${g["player"]}: <span class=${color}>$${g["gain"].toLocaleString()}</span></li>`
+        }).join("");
+
         $('#playerProfits').html(profits);
+        $('#playerGains').html(gains);
         $('#round').html(data["roundNumber"]);
         $('#form-submit').html("<h1>Waiting for all bids...</h1>");
         updateGraph(data); 
