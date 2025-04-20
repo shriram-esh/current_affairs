@@ -40,7 +40,7 @@ $(document).ready(function() {
 
     socket.on('round_over', (data) => {
         $('#errMsg').empty();
-        const profits = data["playerProfits"].map(p => `<li id="${p["player"]}" class="bid-unready">${p["player"]}: $${p["total"].toLocaleString()}</li>`).join("");
+        const profits = data["playerProfits"].map(p => `<li id="${p["id"]}" class="bid-unready">${p["player"]}: $${p["total"].toLocaleString()}</li>`).join("");
         const gains = data["playerGains"].map(g => {
             let color = ""
             if (g["gain"] > 0) {
@@ -64,7 +64,7 @@ $(document).ready(function() {
 
     socket.on('all_bids_status', (data) => {
         console.log(`Received Data: ${data["allBid"]}`)
-        const player = $(`#${data["name"]}`);
+        const player = $(`#${data["player_id"]}`);
         if (player.hasClass("bid-unready")) {
             player.removeClass("bid-unready").addClass("bid-ready");
         }
