@@ -50,7 +50,7 @@
             </div>
         {% endif %}
         <div class="profit-container">
-            <h1>Player Profits</h1>
+            <h1>Player Total Profit</h1>
             <ol id="playerProfits">
                 {% for player in ctx["room"]["players"] %}
                     <li id="{{ player['username'] }}" class="bid-unready">{{ player["username"] }} $0</li>
