@@ -292,7 +292,7 @@ class GameNamespace(Namespace):
         marketUnits = 0
         allBid = game_room.has_all_players_bid()
         if allBid:
-            marketUnits = game_room.get_total_units()
+            marketUnits = game_room.get_total_bid_units()
 
         data = {
             "allBid": allBid,

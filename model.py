@@ -45,6 +45,9 @@ class Bid:
     def get_units(self):
         return self.units
     
+    def get_quantity(self):
+        return self.quantity
+    
     def get_json_bid(self):
         x = {
             "asset": self.asset, 
@@ -205,10 +208,11 @@ class Room:
         for p in self.playersData:
             p.set_bid_status(input_status)
 
-    def get_total_units(self):
+    def get_total_bid_units(self):
         count = 0
         for d in self.playersData:
-            count += d.get_all_player_units()
+            for b in d.get_player_bids():
+                count += b.get_quantity()
         return count 
 
     def get_current_round(self):
