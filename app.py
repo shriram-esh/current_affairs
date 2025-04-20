@@ -22,26 +22,26 @@ def linprog_to_graph(in_data, in_linprog, demand, marketPrice):
     colors = []
     players = []
     for index, p in enumerate(in_data):
-        if in_linprog[index] > 0 and in_linprog[index] < p["bidQuantity"]:
+        if in_linprog[index] > 0 and in_linprog[index] < p["quantity"]:
             # Line intersects bar
-            barHeight.append(p["bidPrice"])
+            barHeight.append(p["price"])
             xList.append(in_linprog[index] / 2 + cur_width)
             widthBar.append(in_linprog[index])
             colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 1)')
-            players.append(p["player"].name)
+            players.append(p["player"])
             cur_width += in_linprog[index]
-            barHeight.append(p["bidPrice"])
-            xList.append(((p["bidQuantity"] - in_linprog[index]) / 2 + cur_width))
-            widthBar.append(p["bidQuantity"] - in_linprog[index])
+            barHeight.append(p["price"])
+            xList.append(((p["quantity"] - in_linprog[index]) / 2 + cur_width))
+            widthBar.append(p["quantity"] - in_linprog[index])
             colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 0.25)')
-            players.append(p["player"].name)
-            cur_width += p["bidQuantity"] - in_linprog[index]
+            players.append(p["player"])
+            cur_width += p["quantity"] - in_linprog[index]
         else:
-            barHeight.append(p["bidPrice"])
-            xList.append(p["bidQuantity"] / 2 + cur_width)
-            widthBar.append(p["bidQuantity"])
-            players.append(p["player"].name)
-            cur_width += p["bidQuantity"]
+            barHeight.append(p["price"])
+            xList.append(p["quantity"] / 2 + cur_width)
+            widthBar.append(p["quantity"])
+            players.append(p["player"])
+            cur_width += p["quantity"]
             if in_linprog[index] == 0:
                 colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 0.25)')
             else:
@@ -237,14 +237,15 @@ class GameNamespace(Namespace):
         print(f"Sent Stats {data} to {name}")
 
     def on_submit_bid(self, data):
+        print("Submit Bid")
         room = session.get("room")
         name = session.get("name")
-        if room not in rooms:
+        game_room = room_manager.get_room(room)
+
+        if game_room is None:
             disconnect()
 
-        print(f"Before Parse: {data}")
         parsed_data = parse_qs(data.get('data', ''))
-        print(f"Before Clean: {parsed_data}")
         parsed_data_clean = {}
 
         for key, values in parsed_data.items():
@@ -259,140 +260,127 @@ class GameNamespace(Namespace):
                     # If both conversions fail, keep it as original type
                     parsed_data_clean[key] = values[0]
         
-        print(parsed_data_clean)
         # Have They Already Placed a Bid
-        for player in rooms[room]["dataList"]:
-            if player.name == name and player.hasBid:
-                socketio.emit('bid_status', {'message': 'Already placed bid. Wait till next round!'}, namespace='/game', to=player.sid)
-                return
+        if game_room.get_player_bid_status(name):
+            socketio.emit('bid_status', {'message': 'Already placed bid. Wait till next round!'}, namespace='/game', to=game_room.get_sid_from_players(name))
+            return
 
         # Error Check data
-        for player in rooms[room]["dataList"]:
-            if player.name != name:
-                continue
+        if 'quantity' not in parsed_data:
+            socketio.emit('bid_status', {'message': f'Enter a Quantity!'}, namespace='/game', to=game_room.get_sid_from_players(name))
+            return
+    
+        if 'price' not in parsed_data:
+            socketio.emit('bid_status', {'message': f'Enter a Price!'}, namespace='/game', to=game_room.get_sid_from_players(name))
+            return
 
-            if 'quantity' not in parsed_data:
-                socketio.emit('bid_status', {'message': f'Enter a Quantity!'}, namespace='/game', to=player.sid)
-                return
+        # Check price is valid and dosen't exceed market price
+        if (parsed_data_clean["price"] < 0 or parsed_data_clean["price"] > market_cap):
+            socketio.emit('bid_status', {'message': 'Enter a different price (ensure it is non-negative number below the market cap)'}, namespace='/game', to=game_room.get_sid_from_players(name))
+            return
         
-            if 'price' not in parsed_data:
-                socketio.emit('bid_status', {'message': f'Enter a Price!'}, namespace='/game', to=player.sid)
-                return
+        player_quantity = game_room.get_player_data_object(name).get_all_player_units()
+        if (parsed_data_clean["quantity"] < 0 or parsed_data_clean["quantity"] > player_quantity):
+            socketio.emit('bid_status', {'message': f'Enter a different quantity (ensure it is non-negative number below the number of units you have ({player_quantity})'}, namespace='/game', to=game_room.get_sid_from_players(name))
+            return
+        
+        game_room.get_player_data_object(name).get_player_single_bid().set_price_quantity(float(parsed_data_clean["price"]), float(parsed_data_clean["quantity"]))
+        game_room.get_player_data_object(name).set_bid_status(True)
+        
+        socketio.emit('bid_status', {'message': 'Bid successful!'}, namespace='/game', to=game_room.get_sid_from_players(name))
 
-            # Check price is valid and dosen't exceed market price
-            if (parsed_data_clean["price"] < 0 or parsed_data_clean["price"] > market_cap):
-                socketio.emit('bid_status', {'message': 'Enter a different price (ensure it is non-negative number below the market cap)'}, namespace='/game', to=player.sid)
-                return
-            if (parsed_data_clean["quantity"] != 'd'):
-                if (parsed_data_clean["quantity"] < 0 or parsed_data_clean["quantity"] > player.bids[0].units):
-                    socketio.emit('bid_status', {'message': f'Enter a different quantity (ensure it is non-negative number below the number of units you have ({player.bids[0].units})'}, namespace='/game', to=player.sid)
-                    return
-            player.bids[0].price = float(parsed_data_clean["price"])
-            if (parsed_data_clean["quantity"] == 'd'):
-                player.bids[0].quantity = player.bids[0].units
-            else:
-                player.bids[0].quantity = float(parsed_data_clean["quantity"])
-            player.hasBid = True
-            
-            socketio.emit('bid_status', {'message': 'Bid successful!'}, namespace='/game', to=player.sid)
+        marketUnits = 0
+        allBid = game_room.has_all_players_bid()
+        if allBid:
+            marketUnits = game_room.get_total_units()
 
-            marketUnits = 0
-            allBid = all(player.hasBid for player in rooms[room]["dataList"])
-            if allBid:
-                for player in rooms[room]["dataList"]:
-                    for bid in player.bids:
-                        marketUnits += bid.quantity
-
-            data = {
-                "allBid": allBid,
-                "name": player.name,
-                "marketUnits": marketUnits
-            }
-
-            socketio.emit('all_bids_status', data, namespace='/game', to=room)
+        data = {
+            "allBid": allBid,
+            "name": name,
+            "marketUnits": marketUnits
+        }
+        print(f"Send data to room: {data}")
+        socketio.emit('all_bids_status', data, namespace='/game', to=room)
  
         print(f"{name} submit data: {parsed_data_clean}")
 
     def on_run_round(self, data):
+        print("Run Round")
         room = session.get("room")
         name = session.get("name")
+        game_room = room_manager.get_room(room)
 
-        if name != rooms[room]["admin"]["username"]:
+        if game_room.get_admin() != name:
             return
 
         # Check if everyone has voted
-        if all(player.hasBid for player in rooms[room]["dataList"]):
-            parsed_data = parse_qs(data.get('data', ''))
-            parsed_data_clean = {}
-
-            for key, values in parsed_data.items():
-                try:
-                    # Try converting the value to an int
-                    parsed_data_clean[key] = int(values[0])
-                except ValueError:
-                    try:
-                        # If that fails, try converting the value to a float
-                        parsed_data_clean[key] = float(values[0])
-                    except ValueError:
-                        # If both conversions fail, keep it as original type
-                        parsed_data_clean[key] = values[0]
-
-            all_bids = []
-            for player in rooms[room]["dataList"]:
-                for bid in player.bids:
-                    all_bids.append({"player": player, "data": bid, "bidPrice": bid.price, "bidQuantity": bid.quantity, "color": player.color})
-            sorted_bids = sorted(all_bids, key=lambda x: x["bidPrice"])
-
-            prices = []
-            quantities = []
-            for bid in sorted_bids:
-                print(bid)
-                prices.append(bid["data"].price)
-                quantities.append(bid["data"].quantity)
-            demand = parsed_data_clean["slider"]
-            print(f"This is the demand: {demand}")
-
-            c = prices #prices
-            u = quantities #quantities of each good
-            b_eq = [demand, 0]
-
-            #l = [0]*len(c)
-            A_eq = [[1]*len(c), [0]*len(c)]
-            bounds = []
-            for upper_bound in u:
-                bounds.append((0, upper_bound))
-
-            #define the quantities cleared and market price  USING MAGIC
-            if sum(u) >= demand:
-                res = linprog(c, A_eq=A_eq, b_eq=b_eq, bounds=bounds)
-                print(f"The marginal returned from LinProg: {res.eqlin['marginals']}")
-                print(f"The vector x returned from LinProg{res.x}\n\n")
-                market_price = res.eqlin["marginals"][0] # What happens if supply dosen't meet demand
-                x = res.x
-            else:
-                market_price = max(c)
-                x = u
-
-            graphData = linprog_to_graph(sorted_bids, x, demand, market_price)
-
-            player_profits = []
-            for index, bid in enumerate(sorted_bids):
-                bid["player"].profit += (market_price - assets[bid["data"].asset][1]) * x[index]
-                player_profits.append({"player": bid["player"].name, "total": bid["player"].profit})
-            sorted_player_profits = sorted(player_profits, key=lambda x: x["total"], reverse=True)
-            data =  {
-                        "graphData": graphData,
-                        "playerProfits": sorted_player_profits,
-                        "roundNumber": rooms[room]["game"]["currentRound"] + 1
-                    }
-            
-            socketio.emit('round_over', data, namespace='/game', to=room)
-            for player in rooms[room]["dataList"]:
-                player.hasBid = False
-
-            rooms[room]["game"]["currentRound"] += 1
-        else:
+        if not game_room.has_all_players_bid():
             socketio.emit('bid_status', {'message': f'Not everyone has voted!'}, namespace='/game', to=rooms[room]["admin"]["sid"])
+            return
+        
+        parsed_data = parse_qs(data.get('data', ''))
+        parsed_data_clean = {}
+
+        for key, values in parsed_data.items():
+            try:
+                # Try converting the value to an int
+                parsed_data_clean[key] = int(values[0])
+            except ValueError:
+                try:
+                    # If that fails, try converting the value to a float
+                    parsed_data_clean[key] = float(values[0])
+                except ValueError:
+                    # If both conversions fail, keep it as original type
+                    parsed_data_clean[key] = values[0]
+
+        all_bids = game_room.get_json_all_bids()
+        sorted_bids = sorted(all_bids, key=lambda x: (x["price"], x["asset"]))
+
+        prices = []
+        quantities = []
+        for bid in sorted_bids:
+            prices.append(bid["price"])
+            quantities.append(bid["quantity"])
+        demand = parsed_data_clean["slider"]
+
+        c = prices #prices
+        u = quantities #quantities of each good
+        b_eq = [demand, 0]
+
+        #l = [0]*len(c)
+        A_eq = [[1]*len(c), [0]*len(c)]
+        bounds = []
+        for upper_bound in u:
+            bounds.append((0, upper_bound))
+
+        #define the quantities cleared and market price  USING MAGIC
+        if sum(u) >= demand:
+            res = linprog(c, A_eq=A_eq, b_eq=b_eq, bounds=bounds)
+            print(f"The marginal returned from LinProg: {res.eqlin['marginals']}")
+            print(f"The vector x returned from LinProg{res.x}\n\n")
+            market_price = res.eqlin["marginals"][0]
+            x = res.x
+        else:
+            market_price = max(c)
+            x = u
+
+        graphData = linprog_to_graph(sorted_bids, x, demand, market_price)
+
+        player_profits = []
+        for index, bid in enumerate(sorted_bids):
+            bid["data"].add_to_profit((market_price - bid["generation"]) * x[index])
+            player_profits.append({"player": bid["player"], "total": bid["data"].get_profit()})
+        sorted_player_profits = sorted(player_profits, key=lambda x: x["total"], reverse=True)
+        data =  {
+                    "graphData": graphData,
+                    "playerProfits": sorted_player_profits,
+                    "roundNumber": game_room.get_current_round() + 1
+                }
+        
+        socketio.emit('round_over', data, namespace='/game', to=room)
+
+        game_room.set_all_players_bid_status(False)
+        game_room.increment_round()
 
 socketio.on_namespace(LobbyNamespace('/lobby'))
 socketio.on_namespace(GameNamespace('/game'))

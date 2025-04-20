@@ -33,8 +33,6 @@ $(document).ready(function() {
 
     socket.on('round_over', (data) => {
         $('#errMsg').empty();
-        // $('#demandCutOff').html(`<p>Demand Cut Off: ${data["graphData"]["demandCutOff"]}</p>`);
-        // $('#priceCutOff').html(`<p>Price Cut Off: ${data["graphData"]["priceCutOff"]}</p>`);
         const profits = data["playerProfits"].map(p => `<li id="${p["player"]}" class="bid-unready">${p["player"]}: $${p["total"].toLocaleString()}</li>`).join("");
         $('#playerProfits').html(profits);
         $('#round').html(data["roundNumber"]);
@@ -47,6 +45,7 @@ $(document).ready(function() {
     });
 
     socket.on('all_bids_status', (data) => {
+        console.log(`Received Data: ${data["allBid"]}`)
         const player = $(`#${data["name"]}`);
         if (player.hasClass("bid-unready")) {
             player.removeClass("bid-unready").addClass("bid-ready");
