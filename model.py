@@ -23,7 +23,7 @@ assets = [
 market_cap = 9000
 
 def get_random_rgba():
-    return f"rgba({random.randint(0,255)},{random.randint(0,255)},{random.randint(0,255)},1)"
+    return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
 class Bid:
     def __init__(self):
@@ -37,6 +37,10 @@ class Bid:
         self.asset = asset
         self.units = units
         self.generation = generation
+    
+    def set_price_quantity(self, price, quantity):
+        self.price = price
+        self.quantity = quantity
         
     def get_units(self):
         return self.units
@@ -61,6 +65,9 @@ class Data:
 
     def get_player_bids(self):
         return self.bids
+    
+    def get_player_single_bid(self):
+        return self.bids[0] # There is only one bid right now but in the future might have multiple
 
     def has_player_bid(self):
         return self.hasBid
@@ -72,7 +79,13 @@ class Data:
         return count
 
     def set_bid_status(self, input):
-        self.hasbid = input
+        self.hasBid = input
+    
+    def add_to_profit(self, in_profit):
+        self.profit += in_profit
+    
+    def get_profit(self):
+        return self.profit
 
     def get_json_data(self):
         bids = []
@@ -173,6 +186,10 @@ class Room:
     def get_player_data(self, input_username):
         p = self.get_data(input_username)
         return p.get_json_data()
+
+    def get_player_data_object(self, input_username):
+        p = self.get_data(input_username)
+        return p
     
     def get_player_bid_status(self, input_username):
         d = self.get_data(input_username)
@@ -191,9 +208,8 @@ class Room:
     def get_total_units(self):
         count = 0
         for d in self.playersData:
-            for b in d.bids:
-                count += len(b)
-        return count #QUESTION do you want a bool or like the number
+            count += d.get_all_player_units()
+        return count 
 
     def get_current_round(self):
         return self.game["currentRound"]
@@ -201,6 +217,17 @@ class Room:
     def increment_round(self):
         self.game["currentRound"] = self.game["currentRound"]+1
 
+    def get_json_all_bids(self):
+        all_bids = []
+        for p_data in self.playersData:
+            for bid in p_data.get_player_bids():
+                in_json = bid.get_json_bid()
+                in_json["data"] = p_data
+                in_json["player"] = p_data.username
+                in_json["color"] = p_data.color
+                all_bids.append(in_json)
+        return all_bids
+    
     def get_json_room(self):
         x = {
             "admin": self.admin.get_json_player(),
