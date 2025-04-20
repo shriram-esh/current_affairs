@@ -21,6 +21,7 @@ def linprog_to_graph(in_data, in_linprog, demand, marketPrice):
     barHeight = []
     colors = []
     players = []
+    costs = []
     for index, p in enumerate(in_data):
         if in_linprog[index] > 0 and in_linprog[index] < p["quantity"]:
             # Line intersects bar
@@ -29,18 +30,21 @@ def linprog_to_graph(in_data, in_linprog, demand, marketPrice):
             widthBar.append(in_linprog[index])
             colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 1)')
             players.append(p["player"])
+            costs.append(p["generation"])
             cur_width += in_linprog[index]
             barHeight.append(p["price"])
             xList.append(((p["quantity"] - in_linprog[index]) / 2 + cur_width))
             widthBar.append(p["quantity"] - in_linprog[index])
             colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 0.25)')
             players.append(p["player"])
+            costs.append(p["generation"])
             cur_width += p["quantity"] - in_linprog[index]
         else:
             barHeight.append(p["price"])
             xList.append(p["quantity"] / 2 + cur_width)
             widthBar.append(p["quantity"])
             players.append(p["player"])
+            costs.append(p["generation"])
             cur_width += p["quantity"]
             if in_linprog[index] == 0:
                 colors.append(f'rgba({p["color"][0]}, {p["color"][1]}, {p["color"][2]}, 0.25)')
@@ -53,7 +57,8 @@ def linprog_to_graph(in_data, in_linprog, demand, marketPrice):
                 "colors": colors,
                 "demand": demand,
                 "marketPrice": marketPrice,
-                "players": players
+                "players": players,
+                "costs": costs
             }
 
 def login_required(f):
