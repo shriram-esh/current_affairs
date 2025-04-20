@@ -28,10 +28,13 @@
                         <label for="bid">Price:</label>
                         <input type="text" id="price" name="price">
                         <input type="submit" id="submit" name="bid-submit" value="Submit Bid">
+                    </form>
+                    <form method="POST" id="default-form">
+                        <input type="hidden" name="default_quantity" value="d">
                         <input type="submit" id="default" name="bid-default" value="Default Bid">
                     </form>
-                    <div id="errMsg">
-                    </div>
+                </div>
+                <div id="errMsg">
                 </div>
             </div>
         {% else %}
@@ -53,6 +56,10 @@
                     <li id="{{ player['username'] }}" class="bid-unready">{{ player["username"] }} $0</li>
                 {% endfor %}
             </ol>
+        </div>
+        <div class="gains-container">
+            <h1>Player Gains</h1>
+            <ol id="playerGains"></ol>
         </div>
     </div>
     <div class="bidGraph"></div>

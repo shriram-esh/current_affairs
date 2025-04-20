@@ -48,6 +48,9 @@ class Bid:
     def get_quantity(self):
         return self.quantity
     
+    def get_generation(self):
+        return self.generation
+    
     def get_json_bid(self):
         x = {
             "asset": self.asset, 
