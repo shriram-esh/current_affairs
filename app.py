@@ -270,26 +270,31 @@ class GameNamespace(Namespace):
             socketio.emit('bid_status', {'message': 'Already placed bid. Wait till next round!'}, namespace='/game', to=game_room.get_sid_from_players(name))
             return
 
-        # Error Check data
-        if 'quantity' not in parsed_data:
-            socketio.emit('bid_status', {'message': f'Enter a Quantity!'}, namespace='/game', to=game_room.get_sid_from_players(name))
-            return
-    
-        if 'price' not in parsed_data:
-            socketio.emit('bid_status', {'message': f'Enter a Price!'}, namespace='/game', to=game_room.get_sid_from_players(name))
-            return
+        if 'default_quantity' in parsed_data_clean:
+            player_bid = game_room.get_player_data_object(name).get_player_single_bid()
+            player_bid.set_price_quantity(player_bid.get_generation(), player_bid.get_units())
+        else:
+            # Error Check data
+            if 'quantity' not in parsed_data:
+                socketio.emit('bid_status', {'message': f'Enter a Quantity!'}, namespace='/game', to=game_room.get_sid_from_players(name))
+                return
+        
+            if 'price' not in parsed_data:
+                socketio.emit('bid_status', {'message': f'Enter a Price!'}, namespace='/game', to=game_room.get_sid_from_players(name))
+                return
 
-        # Check price is valid and dosen't exceed market price
-        if (parsed_data_clean["price"] < 0 or parsed_data_clean["price"] > market_cap):
-            socketio.emit('bid_status', {'message': 'Enter a different price (ensure it is non-negative number below the market cap)'}, namespace='/game', to=game_room.get_sid_from_players(name))
-            return
+            # Check price is valid and dosen't exceed market price
+            if (parsed_data_clean["price"] < 0 or parsed_data_clean["price"] > market_cap):
+                socketio.emit('bid_status', {'message': 'Enter a different price (ensure it is non-negative number below the market cap)'}, namespace='/game', to=game_room.get_sid_from_players(name))
+                return
+            
+            player_quantity = game_room.get_player_data_object(name).get_all_player_units()
+            if (parsed_data_clean["quantity"] < 0 or parsed_data_clean["quantity"] > player_quantity):
+                socketio.emit('bid_status', {'message': f'Enter a different quantity (ensure it is non-negative number below the number of units you have ({player_quantity})'}, namespace='/game', to=game_room.get_sid_from_players(name))
+                return
+            
+            game_room.get_player_data_object(name).get_player_single_bid().set_price_quantity(float(parsed_data_clean["price"]), float(parsed_data_clean["quantity"]))
         
-        player_quantity = game_room.get_player_data_object(name).get_all_player_units()
-        if (parsed_data_clean["quantity"] < 0 or parsed_data_clean["quantity"] > player_quantity):
-            socketio.emit('bid_status', {'message': f'Enter a different quantity (ensure it is non-negative number below the number of units you have ({player_quantity})'}, namespace='/game', to=game_room.get_sid_from_players(name))
-            return
-        
-        game_room.get_player_data_object(name).get_player_single_bid().set_price_quantity(float(parsed_data_clean["price"]), float(parsed_data_clean["quantity"]))
         game_room.get_player_data_object(name).set_bid_status(True)
         
         socketio.emit('bid_status', {'message': 'Bid successful!'}, namespace='/game', to=game_room.get_sid_from_players(name))

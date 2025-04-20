@@ -31,6 +31,13 @@ $(document).ready(function() {
         $('#bid-form')[0].reset();
     });
 
+    $('#default-form').submit((e) => {
+        e.preventDefault();
+        const formData = $('#default-form').serialize();
+        socket.emit('submit_bid', { data: formData });
+        $('#bid-form')[0].reset();
+    });
+
     socket.on('round_over', (data) => {
         $('#errMsg').empty();
         const profits = data["playerProfits"].map(p => `<li id="${p["player"]}" class="bid-unready">${p["player"]}: $${p["total"].toLocaleString()}</li>`).join("");
