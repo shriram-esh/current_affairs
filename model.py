@@ -1,5 +1,4 @@
 import random
-import json
 import string
 
 assets = [
@@ -21,7 +20,15 @@ assets = [
 ] 
 
 market_cap = 9000
+used_ids = set()
 
+def generate_user_id(length=8):
+    while True:
+        user_id = ''.join(random.choices(string.ascii_lowercase + string.digits, k=length))
+        if user_id not in used_ids:
+            used_ids.add(user_id)
+            return user_id
+        
 def get_random_rgba():
     return (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
 
@@ -62,8 +69,9 @@ class Bid:
         return x
 
 class Data:
-    def __init__(self, username, bid_size, profit):
+    def __init__(self, username, id, bid_size, profit):
         self.username = username 
+        self.id = id
         self.bids = [Bid() for _ in range(bid_size)]
         self.profit = profit
         self.color = get_random_rgba()
@@ -92,6 +100,9 @@ class Data:
     
     def get_profit(self):
         return self.profit
+    
+    def get_id(self):
+        return self.id
 
     def get_json_data(self):
         bids = []
@@ -100,6 +111,7 @@ class Data:
 
         x = { 
             "username": self.username, 
+            "id": self.id,
             "bids": bids,
             "profit": self.profit,
             "color": self.color,
@@ -140,13 +152,16 @@ class Room:
         self.players.append(Player(username, sid))
 
     def add_data(self, name, bid_size, profit):
-        self.playersData.append(Data(name, bid_size, profit))
+        self.playersData.append(Data(name, generate_user_id(), bid_size, profit))
 
     def get_room_status(self):
         return self.game["started"]
     
     def get_admin(self):
         return self.admin.get_player_name()
+
+    def get_admin_sid(self):
+        return self.admin.get_player_sid()
 
     def set_room_status(self, input_game_status):
         self.game["started"] = input_game_status
@@ -231,6 +246,7 @@ class Room:
                 in_json = bid.get_json_bid()
                 in_json["data"] = p_data
                 in_json["player"] = p_data.username
+                in_json["id"] = p_data.get_id()
                 in_json["color"] = p_data.color
                 all_bids.append(in_json)
         return all_bids

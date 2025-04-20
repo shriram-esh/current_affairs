@@ -52,8 +52,8 @@
         <div class="profit-container">
             <h1>Player Total Profit</h1>
             <ol id="playerProfits">
-                {% for player in ctx["room"]["players"] %}
-                    <li id="{{ player['username'] }}" class="bid-unready">{{ player["username"] }} $0</li>
+                {% for player in ctx["room"]["playersData"] %}
+                    <li id="{{ player['id'] }}" class="bid-unready">{{ player["username"] }} $0</li>
                 {% endfor %}
             </ol>
         </div>

@@ -162,6 +162,7 @@ class LobbyNamespace(Namespace):
     def on_connect(self):
         room = session.get("room")
         name = session.get("name")
+        print(f"{name} joined room {room}")
         lobby_room = room_manager.get_room(room)
 
         if lobby_room is not None and name:
@@ -304,9 +305,11 @@ class GameNamespace(Namespace):
         if allBid:
             marketUnits = game_room.get_total_bid_units()
 
+        print(f"Submit Bid id: {game_room.get_player_data_object(name).get_id()}")
         data = {
             "allBid": allBid,
             "name": name,
+            "player_id": game_room.get_player_data_object(name).get_id(),
             "marketUnits": marketUnits
         }
         print(f"Send data to room: {data}")
@@ -325,7 +328,7 @@ class GameNamespace(Namespace):
 
         # Check if everyone has voted
         if not game_room.has_all_players_bid():
-            socketio.emit('bid_status', {'message': f'Not everyone has voted!'}, namespace='/game', to=rooms[room]["admin"]["sid"])
+            socketio.emit('bid_status', {'message': f'Not everyone has voted!'}, namespace='/game', to=game_room.get_admin_sid())
             return
         
         parsed_data = parse_qs(data.get('data', ''))
@@ -382,7 +385,7 @@ class GameNamespace(Namespace):
             gain = (market_price - bid["generation"]) * x[index]
             bid["data"].add_to_profit((market_price - bid["generation"]) * x[index])
             player_gains.append({"player": bid["player"], "gain": gain})
-            player_profits.append({"player": bid["player"], "total": bid["data"].get_profit()})
+            player_profits.append({"player": bid["player"], "id": bid["id"], "total": bid["data"].get_profit()})
         sorted_player_profits = sorted(player_profits, key=lambda x: x["total"], reverse=True)
         sorted_player_gains = sorted(player_gains, key=lambda x: x["gain"], reverse=True)
         data =  {
