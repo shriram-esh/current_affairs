@@ -69,6 +69,12 @@ input[type="text"] {
     gap: 20px;
 }
 
+.gains-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
 #assets-list {
     display: flex;
     flex-direction: column;
@@ -94,6 +100,19 @@ input[type="text"] {
 }
 
 #playerProfits > li {
+    margin-bottom: 5px;
+}
+
+#playerGains{
+    justify-content: center;
+    font-family: "Work Sans", serif;
+    font-size: 1rem;
+    color: var(--title-color);
+    list-style-position: inside; /* Ensures numbers are inside the list box */
+    padding-left: 0; /* Removes extra indentation */
+}
+
+#playerGains > li {
     margin-bottom: 5px;
 }
 
@@ -149,5 +168,13 @@ input[type="text"] {
 }
 
 .bid-unready {
+    color: red;
+}
+
+.positive {
+    color: green;
+}
+
+.negative {
     color: red;
 }
