@@ -1,5 +1,5 @@
 # Current Affairs - An Electricity Market Simulator
-Summary goes here.
+Summary goes here
 
 ## For details on how to play the game, please visit:
 https://docs.google.com/document/d/1qAoguOG4JXrEo5-WjVypfzrSYUI6a8GXAxnXfBTelGM/edit?usp=sharing
