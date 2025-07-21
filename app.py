@@ -267,7 +267,11 @@ class GameNamespace(Namespace):
             name = p["username"]
             if not game_room.get_player_bid_status(name): # havent bid yet
                     game_room.get_player_data_object(name).set_bid_status(True)
-                    game_room.get_player_data_object(name).get_player_single_bid().set_price_quantity(0.0, 0.0)
+
+                    player_bid = game_room.get_player_data_object(name).get_player_single_bid()
+                    player_bid.set_price_quantity(player_bid.get_generation(), player_bid.get_units())
+
+                    # game_room.get_player_data_object(name).get_player_single_bid().set_price_quantity(0.0, 0.0)
                     socketio.emit('bid_status', {'message': 'Bid successful!'}, namespace='/game', to=game_room.get_sid_from_players(name))
 
                     marketUnits = 0
