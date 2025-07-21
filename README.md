@@ -37,7 +37,7 @@ For deployment, we use the cloud service Heroku and the Heroku CLI.
 
 7. **(Optional)** Heroku needs a Procfile to know how to run the application. A default one has already been created in the repository. If you want to customize your application further, you can edit the Procfile.
 
-8. Ensure you are on the branch you would like to push to Heroku. use `git switch <branch-name>` to switch branches. The main branch is a basic version of the game, while the with_events branch has more features.
+8. Ensure you are on the branch you would like to push to Heroku using `git branch -a`. If not, `git switch <branch-name>` switches branches. The main branch is a basic version of the game, while the with_events branch has more features.
 
 9. Run `git push heroku main:<branch-name>` this will push your code to the Heroku server. **This may take a couple of minutes.**
 
