@@ -35,11 +35,13 @@ For deployment, we use the cloud service Heroku and the Heroku CLI.
 
 6. Run `heroku create <your-app-name>` replace \<your-app-name\> with any name you want for the application.
 
-7. **(Optional)** Heroku needs a Procfile to know how to run the application. A default one has already been created in the repository. If you want to customize your application further, you can edit the Procfile.
+7. Run `git remote -v` and ensure you are accessing the intended server; if not, run `heroku git:remote -a <your-app-name>`
 
-8. Ensure you are on the branch you would like to push to Heroku using `git branch -a`, for the version of the game with the most features, please be on the branch called 'with_events'. If you are not already on this branch type,  `git switch with_events` to switch branches.
+8. **(Optional)** Heroku needs a Procfile to know how to run the application. A default one has already been created in the repository. If you want to customize your application further, you can edit the Procfile.
 
-9. Run `git push heroku with_events:main` this will push your code to the Heroku server. **This may take a couple of minutes.**
+9. Ensure you are on the branch you would like to push to Heroku using `git branch -a`, for the version of the game with the most features, please be on the branch called 'with_events'. If you are not already on this branch type,  `git switch with_events` to switch branches.
+
+10. Run `git push heroku with_events:main` this will push your code to the Heroku server. **This may take a couple of minutes.**
 
 ### Start Server
 
