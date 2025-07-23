@@ -31,17 +31,19 @@ For deployment, we use the cloud service Heroku and the Heroku CLI.
 
 ### Push Code to Heroku Server
 
-5. Using the Heroku CLI, log into your Heroku account using the `heroku login` command. This will open a browser window to authenticate your Heroku account.
+5. Enter the directory with `cd current_affairs`
 
-6. Run `heroku create <your-app-name>` replace \<your-app-name\> with any name you want for the application.
+6. Using the Heroku CLI, log into your Heroku account using the `heroku login` command. This will open a browser window to authenticate your Heroku account.
 
-7. Run `git remote -v` and ensure you are accessing the intended server; if not, run `heroku git:remote -a <your-app-name>`
+7. Run `heroku create <your-app-name>` replace \<your-app-name\> with any name you want for the application.
 
-8. **(Optional)** Heroku needs a Procfile to know how to run the application. A default one has already been created in the repository. If you want to customize your application further, you can edit the Procfile.
+8. Run `git remote -v` and ensure you are accessing the intended server; if not, run `heroku git:remote -a <your-app-name>`
 
-9. Ensure you are on the branch you would like to push to Heroku using `git branch -a`, for the version of the game with the most features, please be on the branch called 'with_events'. If you are not already on this branch type,  `git switch with_events` to switch branches.
+9. **(Optional)** Heroku needs a Procfile to know how to run the application. A default one has already been created in the repository. If you want to customize your application further, you can edit the Procfile.
 
-10. Run `git push heroku with_events:main` this will push your code to the Heroku server. **This may take a couple of minutes.**
+10. Ensure you are on the branch you would like to push to Heroku using `git branch -a`, for the version of the game with the most features, please be on the branch called 'with_events'. If you are not already on this branch type,  `git switch with_events` to switch branches.
+
+11. Run `git push heroku with_events:main` this will push your code to the Heroku server. **This may take a couple of minutes.**
 
 ### Start Server
 
