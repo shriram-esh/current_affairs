@@ -4,7 +4,7 @@ Summary goes here
 ## For details on how to play the game, please visit:
 1. Copy and paste the link shared into browser 
 2. Enter name into the box
-<img src="README_images/CA_image_1.png" width="400"/>
+<img src="README_images/CA_image_1.png" alt="Alt text" width="300"/>
 3. Type in the lobby code shared
 ![Alt text](README_images/CA_image_2.png)
 4. Click join room
