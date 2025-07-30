@@ -4,16 +4,21 @@ Summary goes here
 ## For details on how to play the game, please visit:
 1. Copy and paste the link shared into browser 
 2. Enter name into the box
-3. ![Alt text](README_images/CA_image_1.png)
-4. Type in the lobby code shared
-5. Click join room
-6. See the following screen
-7. Once the administrator starts the game, we will have the following screen
-8. Type in the quantity and the price or you can hit the default, under generation capacity and non-negative price. 
-9. After every submitted we have the following screen
-10. The users will then see the following screen
-11. Each bar represents one player and hovering over the cursor shows the quantity and the price. The redline is the market price and the black line is the demand. Players to the left of the demand line are able to sell and are not kicked out of the market. If they are on the right of the demand line they are kicked out of the market because their price is too high and the cheaper generators are already able to sell.
-12. The player total profit and the player gains shows the money a player earned so far throughout the game and the money a player earned in the last round. 
+![Alt text](README_images/CA_image_1.png)
+3. Type in the lobby code shared
+![Alt text](README_images/CA_image_2.png)
+4. Click join room
+5. See the following screen
+![Alt text](README_images/CA_image_3.png)
+6. Once the administrator starts the game, we will have the following screen
+![Alt text](README_images/CA_image_4.png)
+7. Type in the quantity and the price or you can hit the default, under generation capacity and non-negative price. 
+8. After every submitted we have the following screen
+![Alt text](README_images/CA_image_5.png)
+9. The users will then see the following screen
+![Alt text](README_images/CA_image_6.png)
+10. Each bar represents one player and hovering over the cursor shows the quantity and the price. The redline is the market price and the black line is the demand. Players to the left of the demand line are able to sell and are not kicked out of the market. If they are on the right of the demand line they are kicked out of the market because their price is too high and the cheaper generators are already able to sell.
+11. The player total profit and the player gains shows the money a player earned so far throughout the game and the money a player earned in the last round. 
 
 
 ## Deployment
