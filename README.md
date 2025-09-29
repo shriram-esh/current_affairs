@@ -1,15 +1,14 @@
 # Current Affairs - An Electricity Market Simulator
 Current Affairs is an interactive electricity market simulator, where you’ll step into the role of a wholesale electricity trader. Using your laptop as a trading station, you’ll participate in online power exchange simulations that capture the impact of energy policies (taxes, subsidies) and uncertainties (heat waves, storms). Through multiple trading rounds, you’ll place bids, watch the market clear in real time, and see how prices, revenues, and other system outcomes shift under different scenarios. 
-![1](https://github.com/user-attachments/assets/0d1672e8-67c5-4b95-9012-e4741cfbec8d)
-![2](https://github.com/user-attachments/assets/9d82d2f4-01d8-4547-adac-f4191e252baa)
-![3](https://github.com/user-attachments/assets/90977085-6746-4178-834f-f11242015b1d)
-![4](https://github.com/user-attachments/assets/193f2547-8409-4824-86eb-f81bc31f0d3f)
-![5](https://github.com/user-attachments/assets/b2f585bf-1e25-43df-b132-6d647573dc55)
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/0d1672e8-67c5-4b95-9012-e4741cfbec8d" width="300"/>
+  <img src="https://github.com/user-attachments/assets/9d82d2f4-01d8-4547-adac-f4191e252baa" width="300"/>
+  <img src="https://github.com/user-attachments/assets/90977085-6746-4178-834f-f11242015b1d" width="300"/>
+</p>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/0d1672e8-67c5-4b95-9012-e4741cfbec8d" width="200"/>
-  <img src="https://github.com/user-attachments/assets/9d82d2f4-01d8-4547-adac-f4191e252baa" width="200"/>
-  <img src="https://github.com/user-attachments/assets/90977085-6746-4178-834f-f11242015b1d" width="200"/>
+  <img src="https://github.com/user-attachments/assets/193f2547-8409-4824-86eb-f81bc31f0d3f" width="300"/>
+  <img src="https://github.com/user-attachments/assets/b2f585bf-1e25-43df-b132-6d647573dc55" width="300"/>
 </p>
 
 
